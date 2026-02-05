@@ -7,7 +7,6 @@ import CasesPage from "../modules/cases/CasesPage";
 import CreateCase from "../modules/cases/CreateCase";
 import EditCase from "../modules/cases/EditCase";
 import UsersPage from "../modules/users/UsersPage";
-import ReportsPage from "../modules/reports/ReportsPage";
 import LoginForm from "../modules/auth/LoginForm";
 import KnowledgeBasePage from "../modules/knowledge/KnowledgeBasePage";
 import KnowledgeBaseArticlePage from "../modules/knowledge/KnowledgeBaseArticlePage";
@@ -26,7 +25,6 @@ const AppRoutes = () => {
         <Route path="/knowledge/:articleId" element={<KnowledgeBaseArticlePage />} />
         <Route path="/systems" element={<SystemsPage />} />
         <Route path="/users" element={<UsersPage />} />
-        <Route path="/reports" element={<ReportsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

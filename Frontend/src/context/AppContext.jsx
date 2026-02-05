@@ -2,28 +2,47 @@ import React, { createContext, useContext, useMemo, useState } from "react";
 
 const AppContext = createContext(null);
 
-const defaultUser = {
-  name: "Tariro Moyo",
-  role: "Admin",
-  department: "Case Operations",
+const loadStoredUser = () => {
+  try {
+    const raw = localStorage.getItem("case-tracker-user");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && parsed.name && parsed.role ? parsed : null;
+  } catch (error) {
+    return null;
+  }
 };
 
 export const AppProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const storedRole = localStorage.getItem("case-tracker-role");
-    return storedRole ? { ...defaultUser, role: storedRole } : defaultUser;
-  });
+  const [user, setUser] = useState(() => loadStoredUser());
 
   const setRole = (role) => {
-    localStorage.setItem("case-tracker-role", role);
-    setUser((prev) => ({ ...prev, role }));
+    setUser((prev) => {
+      if (!prev) {
+        return prev;
+      }
+      const next = { ...prev, role };
+      localStorage.setItem("case-tracker-user", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const updateUser = (nextUser) => {
+    localStorage.setItem("case-tracker-user", JSON.stringify(nextUser));
+    setUser(nextUser);
+  };
+
+  const logout = () => {
+    localStorage.removeItem("case-tracker-user");
+    setUser(null);
   };
 
   const value = useMemo(
     () => ({
       user,
-      setUser,
+      setUser: updateUser,
       setRole,
+      logout,
     }),
     [user]
   );

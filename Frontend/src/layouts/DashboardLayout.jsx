@@ -1,11 +1,18 @@
 import React from "react";
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { Box, Flex, useDisclosure } from "@chakra-ui/react";
 import Sidebar from "../components/navigation/Sidebar";
 import TopNav from "../components/navigation/TopNav";
+import { useAppContext } from "../context/AppContext";
 
 const DashboardLayout = () => {
   const mobileNav = useDisclosure();
+  const { user } = useAppContext();
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <Flex minH="100vh" bg="surface.subtle">
       <Sidebar isOpen={mobileNav.isOpen} onClose={mobileNav.onClose} />

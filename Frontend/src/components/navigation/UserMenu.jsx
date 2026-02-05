@@ -10,10 +10,16 @@ import {
   Stack,
 } from "@chakra-ui/react";
 import { useAppContext } from "../../context/AppContext";
-import { ROLES } from "../../utils/constants";
+import { useNavigate } from "react-router-dom";
 
 const UserMenu = () => {
-  const { user, setRole } = useAppContext();
+  const { user, logout } = useAppContext();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/", { replace: true });
+  };
 
   return (
     <Menu>
@@ -32,14 +38,9 @@ const UserMenu = () => {
       </MenuButton>
       <MenuList>
         <MenuItem isDisabled fontWeight="600">
-          Switch Role
+          Role: {user.role}
         </MenuItem>
-        {ROLES.map((role) => (
-          <MenuItem key={role} onClick={() => setRole(role)}>
-            {role}
-          </MenuItem>
-        ))}
-        <MenuItem isDisabled>Logout (UI only)</MenuItem>
+        <MenuItem onClick={handleLogout}>Logout</MenuItem>
       </MenuList>
     </Menu>
   );

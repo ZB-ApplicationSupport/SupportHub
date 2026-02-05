@@ -7,17 +7,20 @@ import {
   FormControl,
   FormErrorMessage,
   FormLabel,
-  Input,Box,
+  Input,
+  Box,
   Center,
   Heading,
-  Stack,
-  navigate
+  Stack
 } from "@chakra-ui/react";
 import logo from '../../Assets/logo.png';
 import { useNavigate } from "react-router-dom";
+import { users } from "../../data/users";
+import { useAppContext } from "../../context/AppContext";
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const { setUser } = useAppContext();
   const [formState, setFormState] = useState({
     username: "",
     password: "",
@@ -27,6 +30,9 @@ const LoginForm = () => {
 
   const handleChange = (event) => {
     setFormState((prev) => ({ ...prev, [event.target.name]: event.target.value }));
+    if (status !== "idle") {
+      setStatus("idle");
+    }
   };
 
   const handleSubmit = (event) => {
@@ -35,8 +41,25 @@ const LoginForm = () => {
     if (!formState.username || !formState.password) {
       setStatus("error");
       return;
+    } 
+    const matchedUser = users.find(
+      (user) =>
+        user.active &&
+        (user.username === formState.username || user.email === formState.username) &&
+        user.password === formState.password
+    );
+    if (!matchedUser) {
+      setStatus("invalid");
+      return;
     }
-    setStatus("success")
+    setUser({
+      id: matchedUser.id,
+      name: matchedUser.name,
+      role: matchedUser.role,
+      department: "Case Operations",
+      email: matchedUser.email,
+    });
+    setStatus("success");
     setTimeout(() => navigate("/dashboard"), 500);
   };
 
@@ -95,6 +118,14 @@ const LoginForm = () => {
             <AlertIcon />
             <AlertDescription>
               Please enter your username and password to continue.
+            </AlertDescription>
+          </Alert>
+        )}
+        {status === "invalid" && (
+          <Alert status="error" borderRadius="md">
+            <AlertIcon />
+            <AlertDescription>
+              Invalid credentials. Check your username and password.
             </AlertDescription>
           </Alert>
         )}
