@@ -6,6 +6,7 @@ import {
   IconButton,
   Stack,
   Text,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { HamburgerIcon } from "@chakra-ui/icons";
 import ColorModeToggle from "../common/ColorModeToggle";
@@ -14,6 +15,7 @@ import { useAppContext } from "../../context/AppContext";
 
 const TopNav = ({ onOpen }) => {
   const { user } = useAppContext();
+  const bg = useColorModeValue("surface.bg", "slate.900");
 
   return (
     <Flex
@@ -21,7 +23,7 @@ const TopNav = ({ onOpen }) => {
       justify="space-between"
       px={{ base: 4, md: 8 }}
       py={4}
-      bg="surface.bg"
+      bg={bg}
       position="sticky"
       top={0}                 
       zIndex={10}   

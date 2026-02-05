@@ -14,6 +14,7 @@ import CreateCaseModal from "../../components/modals/CreateCaseModal";
 import EditCaseModal from "../../components/modals/EditCaseModal";
 import { cases } from "../../data/cases";
 import { filterCases, sortCases } from "../../utils/caseUtils";
+import { exportCasesToExcel } from "../../utils/exportUtils";
 import { useSearchParams } from "react-router-dom";
 
 const CasesPage = () => {
@@ -34,6 +35,10 @@ const CasesPage = () => {
     const filtered = filterCases(cases, query, status, priority, system);
     return sortCases(filtered, sortKey, direction);
   }, [query, status, priority, system, sortKey, direction]);
+
+  const handleExport = () => {
+    exportCasesToExcel(filteredCases);
+  };
 
   const openCase = (item) => {
     setSelectedCase(item);
@@ -86,7 +91,9 @@ const CasesPage = () => {
           <Button onClick={createModal.onOpen}>
             Create Case
           </Button>
-          <Button variant="outline">Export List</Button>
+          <Button variant="outline" onClick={handleExport}>
+            Export List
+          </Button>
         </Stack>
       </SimpleGrid>
 

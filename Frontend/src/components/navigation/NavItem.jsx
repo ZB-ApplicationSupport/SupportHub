@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Box, Flex, Text, useColorModeValue } from "@chakra-ui/react";
+import { Box, Flex, Text } from "@chakra-ui/react";
 
 const NavItem = ({ item }) => {
 
@@ -14,7 +14,7 @@ const NavItem = ({ item }) => {
         bg: "white",
         color: "brand.600",
         pointerEvents: "none",
-         _dark: { bg: "white", color: "darkBlue.500" },
+        _dark: { bg: "white", color: "slate.900" },
       }}
       _hover={{
         bgColor: "brand.500",

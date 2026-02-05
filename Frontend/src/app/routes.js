@@ -11,6 +11,7 @@ import LoginForm from "../modules/auth/LoginForm";
 import KnowledgeBasePage from "../modules/knowledge/KnowledgeBasePage";
 import KnowledgeBaseArticlePage from "../modules/knowledge/KnowledgeBaseArticlePage";
 import SystemsPage from "../modules/systems/SystemsPage";
+import PasswordsPage from "../modules/passwords/PasswordsPage";
 
 const AppRoutes = () => {
   return (
@@ -24,6 +25,7 @@ const AppRoutes = () => {
         <Route path="/knowledge" element={<KnowledgeBasePage />} />
         <Route path="/knowledge/:articleId" element={<KnowledgeBaseArticlePage />} />
         <Route path="/systems" element={<SystemsPage />} />
+        <Route path="/passwords" element={<PasswordsPage />} />
         <Route path="/users" element={<UsersPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

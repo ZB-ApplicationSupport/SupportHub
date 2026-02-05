@@ -9,6 +9,11 @@ export const NAV_ITEMS = [
     roles: ["Admin", "Agent", "Viewer"],
   },
   {
+    label: "Passwords",
+    path: "/passwords",
+    roles: ["Admin", "Agent", "Viewer"],
+  },
+  {
     label: "Supported Systems",
     path: "/systems",
     roles: ["Admin"],
