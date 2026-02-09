@@ -12,7 +12,7 @@ export const users = [
     id: "USR-002",
     name: "Analyst User",
     username: "analyst",
-    role: "Agent",
+    role: "User",
     email: "analyst@zb.co.zw",
     password: "agent123",
     active: true,

@@ -3,8 +3,7 @@ import { Badge } from "@chakra-ui/react";
 
 const roleColors = {
   Admin: "purple",
-  Agent: "blue",
-  Viewer: "gray",
+  User: "blue",
 };
 
 const RoleBadge = ({ role }) => {

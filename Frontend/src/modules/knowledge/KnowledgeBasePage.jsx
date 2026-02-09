@@ -61,9 +61,6 @@ const KnowledgeBasePage = () => {
         <SimpleGrid columns={{ base: 1, md: 2 }} alignItems="center" spacing={4}>
           <Box>
             <Heading size="lg">Knowledge Base</Heading>
-            <Text color="text.muted">
-              Search and learn from enterprise support articles and playbooks.
-            </Text>
           </Box>
           <Box textAlign={{ base: "left", md: "right" }}>
             <Button
@@ -77,37 +74,25 @@ const KnowledgeBasePage = () => {
         </SimpleGrid>
       </Box>
 
-      <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4}>
+      <Stack spacing={4}>
         <KnowledgeBaseSearch value={query} onChange={setQuery} />
-        <KnowledgeBaseSort value={sortKey} onChange={setSortKey} />
-      </SimpleGrid>
-
-      <KnowledgeBaseFilters
-        system={system}
-        category={category}
-        tag={tag}
-        systems={systems}
-        categories={knowledgeCategories}
-        tags={knowledgeTags}
-        onSystemChange={setSystem}
-        onCategoryChange={setCategory}
-        onTagChange={setTag}
-      />
-
-      <ButtonGroup size="sm" alignSelf="flex-end">
-        <IconButton
-          aria-label="Card view"
-          icon={<ViewIcon />}
-          variant={view === "card" ? "solid" : "outline"}
-          onClick={() => setView("card")}
-        />
-        <IconButton
-          aria-label="List view"
-          icon={<ViewOffIcon />}
-          variant={view === "list" ? "solid" : "outline"}
-          onClick={() => setView("list")}
-        />
-      </ButtonGroup>
+        <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4} alignItems="center">
+          <KnowledgeBaseFilters
+            system={system}
+            category={category}
+            tag={tag}
+            systems={systems}
+            categories={knowledgeCategories}
+            tags={knowledgeTags}
+            onSystemChange={setSystem}
+            onCategoryChange={setCategory}
+            onTagChange={setTag}
+          />
+          <Box textAlign={{ base: "left", lg: "right" }}>
+            <KnowledgeBaseSort value={sortKey} onChange={setSortKey} />
+          </Box>
+        </SimpleGrid>
+      </Stack>
 
       <KnowledgeBaseList items={sorted} view={view} onEdit={openEdit} />
       <CreateArticleModal
@@ -120,7 +105,6 @@ const KnowledgeBasePage = () => {
         isOpen={editModal.isOpen}
         onClose={editModal.onClose}
         article={selectedArticle}
-        categories={knowledgeCategories}
         systems={systems}
       />
     </Stack>

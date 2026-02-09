@@ -17,12 +17,9 @@ import {
 } from "@chakra-ui/react";
 import logo from '../../Assets/logo.png';
 import { useNavigate } from "react-router-dom";
-import { users } from "../../data/users";
-import { useAppContext } from "../../context/AppContext";
 
-const LoginForm = () => {
+const SignUp = () => {
   const navigate = useNavigate();
-  const { setUser } = useAppContext();
   const pageBg = useColorModeValue("gray.100", "slate.900");
   const cardBg = useColorModeValue("white", "slate.800");
   const headingColor = useColorModeValue("gray.700", "white");
@@ -30,8 +27,13 @@ const LoginForm = () => {
   const [formState, setFormState] = useState({
     username: "",
     password: "",
+    confirmPassword: "",
   });
-  const [touched, setTouched] = useState({ username: false, password: false });
+  const [touched, setTouched] = useState({
+    username: false,
+    password: false,
+    confirmPassword: false,
+  });
   const [status, setStatus] = useState("idle");
 
   const handleChange = (event) => {
@@ -43,34 +45,28 @@ const LoginForm = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    setTouched({ username: true, password: true });
-    if (!formState.username || !formState.password) {
+    setTouched({ username: true, password: true, confirmPassword: true });
+    if (!formState.username || !formState.password || !formState.confirmPassword) {
       setStatus("error");
       return;
     } 
-    const matchedUser = users.find(
-      (user) =>
-        user.active &&
-        (user.username === formState.username || user.email === formState.username) &&
-        user.password === formState.password
-    );
-    if (!matchedUser) {
-      setStatus("invalid");
+    if (formState.password !== formState.confirmPassword) {
+      setStatus("mismatch");
       return;
     }
-    setUser({
-      id: matchedUser.id,
-      name: matchedUser.name,
-      role: matchedUser.role,
-      department: "Case Operations",
-      email: matchedUser.email,
-    });
     setStatus("success");
-    setTimeout(() => navigate("/dashboard"), 500);
+    setTimeout(() => navigate("/"), 800);
+    setFormState({ username: "", password: "", confirmPassword: "" });
   };
 
   const usernameError = touched.username && !formState.username;
   const passwordError = touched.password && !formState.password;
+  const confirmPasswordError =
+    touched.confirmPassword && !formState.confirmPassword;
+  const passwordMismatch =
+    touched.confirmPassword &&
+    formState.confirmPassword &&
+    formState.password !== formState.confirmPassword;
 
   return (
     <Box>
@@ -90,21 +86,21 @@ const LoginForm = () => {
             boxShadow="lg"
             >
             <Heading as="h2" size="lg" textAlign="center" mb={6} color={headingColor}>
-                Login
+                Sign Up Request
             </Heading>
             <form onSubmit={handleSubmit} aria-label="Login form">
       <Stack spacing={4}>
         <FormControl isInvalid={usernameError} isRequired>
-          <FormLabel color={labelColor}>Username</FormLabel>
+          <FormLabel color={labelColor}>Email</FormLabel>
           <Input
             name="username"
-            placeholder="Enter your username"
+            placeholder="Enter your email"
             value={formState.username}
             onChange={handleChange}
             onBlur={() => setTouched((prev) => ({ ...prev, username: true }))}
             autoComplete="username"
           />
-          <FormErrorMessage>Username is required.</FormErrorMessage>
+          <FormErrorMessage>Email is required.</FormErrorMessage>
         </FormControl>
         <FormControl isInvalid={passwordError} isRequired>
           <FormLabel>Password</FormLabel>
@@ -119,25 +115,49 @@ const LoginForm = () => {
           />
           <FormErrorMessage>Password is required.</FormErrorMessage>
         </FormControl>
+        <FormControl isInvalid={confirmPasswordError || passwordMismatch} isRequired>
+          <FormLabel>Confirm Password</FormLabel>
+          <Input
+            name="confirmPassword"
+            type="password"
+            placeholder="Confirm your password"
+            value={formState.confirmPassword || ""}
+            onChange={handleChange}
+            onBlur={() => setTouched((prev) => ({ ...prev, confirmPassword: true }))}
+            autoComplete="current-password"
+          />
+          <FormErrorMessage>
+            {confirmPasswordError
+              ? "Password confirmation is required."
+              : "Passwords do not match."}
+          </FormErrorMessage>
+        </FormControl>
+
         <Text fontSize="sm" color={labelColor} textAlign="center">
-          Don&#39;t have an account?{" "}
-          <Text as="span" color="blue.500" fontWeight="600" cursor="pointer" onClick={() => navigate("/signup")}>
-            Sign up
+          Already have an account?{" "}
+          <Text
+            as="span"
+            color="blue.500"
+            fontWeight="600"
+            cursor="pointer"
+            onClick={() => navigate("/")}
+          >
+            Login
           </Text>
         </Text>
         {status === "error" && (
           <Alert status="error" borderRadius="md">
             <AlertIcon />
             <AlertDescription>
-              Please enter your username and password to continue.
+              Please enter your email, password and confirm password to continue.
             </AlertDescription>
           </Alert>
         )}
-        {status === "invalid" && (
+        {status === "mismatch" && (
           <Alert status="error" borderRadius="md">
             <AlertIcon />
             <AlertDescription>
-              Invalid credentials. Check your username and password.
+              Passwords do not match. Please confirm again.
             </AlertDescription>
           </Alert>
         )}
@@ -145,24 +165,13 @@ const LoginForm = () => {
           <Alert status="success" borderRadius="md">
             <AlertIcon />
             <AlertDescription>
-              Login validated. Proceed to your dashboard.
+              Request submitted successfully. You will receive an email once your account is approved.
             </AlertDescription>
           </Alert>
         )}
         <Button type="submit" size="lg" width="full" colorScheme="brand">
-          Sign in
+          Send Request
         </Button>
-         <Text
-          fontSize="sm"
-          color={labelColor}
-          textAlign="center"
-          cursor="pointer"
-          onClick={() => navigate("/forgot-password")}
-          onPointerEnter={(e) => e.target.style.textDecoration = "underline"}
-          onPointerLeave={(e) => e.target.style.textDecoration = "none"}
-        >
-          Forgot password?
-        </Text>
       </Stack>
     </form>
             </Box>
@@ -171,4 +180,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default SignUp;

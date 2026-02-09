@@ -1,17 +1,17 @@
-export const ROLES = ["Admin", "Agent", "Viewer"];
+export const ROLES = ["Admin", "User"];
 
 export const NAV_ITEMS = [
-  { label: "Dashboard", path: "/dashboard", roles: ["Admin", "Agent", "Viewer"] },
-  { label: "Cases", path: "/cases", roles: ["Admin", "Agent", "Viewer"] },
+  { label: "Dashboard", path: "/dashboard", roles: ["Admin", "User"] },
+  { label: "Cases", path: "/cases", roles: ["Admin", "User"] },
   {
     label: "Knowledge Base",
     path: "/knowledge",
-    roles: ["Admin", "Agent", "Viewer"],
+    roles: ["Admin", "User"],
   },
   {
     label: "Passwords",
     path: "/passwords",
-    roles: ["Admin", "Agent", "Viewer"],
+    roles: ["Admin", "User"],
   },
   {
     label: "Supported Systems",

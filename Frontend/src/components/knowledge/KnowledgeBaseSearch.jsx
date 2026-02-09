@@ -4,8 +4,8 @@ import { SearchIcon } from "@chakra-ui/icons";
 
 const KnowledgeBaseSearch = ({ value, onChange }) => {
   return (
-    <InputGroup>
-      <InputLeftElement pointerEvents="none">
+    <InputGroup bgColor="white" borderRadius="md" boxShadow="sm">
+      <InputLeftElement pointerEvents="none" >
         <SearchIcon color="gray.400" />
       </InputLeftElement>
       <Input

@@ -83,9 +83,6 @@ const CasesPage = () => {
       <SimpleGrid columns={{ base: 1, md: 2 }} alignItems="center" spacing={4}>
         <Box>
           <Heading size="lg">Cases</Heading>
-          <Text color="text.muted">
-            Manage incidents across critical banking systems.
-          </Text>
         </Box>
         <Stack direction={{ base: "column", md: "row" }} justify="flex-end">
           <Button onClick={createModal.onOpen}>

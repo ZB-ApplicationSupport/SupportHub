@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 import UserRow from "./UserRow";
 
-const UsersTable = ({ items }) => {
+const UsersTable = ({ items, canEditRole, onRoleChange }) => {
   return (
     <Box bg="surface.card" borderRadius="xl" borderWidth="1px">
       <TableContainer>
@@ -26,7 +26,12 @@ const UsersTable = ({ items }) => {
           </Thead>
           <Tbody>
             {items.map((user) => (
-              <UserRow key={user.id} user={user} />
+              <UserRow
+                key={user.id}
+                user={user}
+                canEditRole={canEditRole}
+                onRoleChange={onRoleChange}
+              />
             ))}
           </Tbody>
         </Table>

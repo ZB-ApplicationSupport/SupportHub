@@ -40,7 +40,7 @@ const DashboardPage = () => {
         description: "All escalated cases assigned to senior agents.",
       },
     ],
-    Agent: [
+    User: [
       {
         title: "My Workload",
         description: "4 open cases assigned to you today.",
@@ -48,16 +48,6 @@ const DashboardPage = () => {
       {
         title: "Next Shift Handoff",
         description: "Prepare summary for 2 pending cases.",
-      },
-    ],
-    Viewer: [
-      {
-        title: "Visibility Summary",
-        description: "Read-only access to 12 cases in your scope.",
-      },
-      {
-        title: "Audit Readiness",
-        description: "Latest compliance report generated 2 days ago.",
       },
     ],
   };
