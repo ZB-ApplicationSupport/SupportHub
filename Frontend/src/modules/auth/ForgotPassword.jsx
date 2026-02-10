@@ -66,7 +66,7 @@ const ForgotPassword = () => {
           <Heading as="h2" size="lg" textAlign="center" mb={6} color={headingColor}>
             Forgot Password
           </Heading>
-          <form onSubmit={handleSubmit} aria-label="Forgot password form">
+          <form onSubmit={handleSubmit} aria-label="Forgot password form" autoComplete="off">
             <Stack spacing={4}>
               <FormControl isInvalid={emailError} isRequired>
                 <FormLabel color={labelColor}>Email</FormLabel>
@@ -79,7 +79,7 @@ const ForgotPassword = () => {
                     if (status !== "idle") setStatus("idle");
                   }}
                   onBlur={() => setTouched(true)}
-                  autoComplete="email"
+                  autoComplete="off"
                 />
                 <FormErrorMessage>Email is required.</FormErrorMessage>
               </FormControl>

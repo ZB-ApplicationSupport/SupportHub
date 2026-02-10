@@ -36,7 +36,7 @@ public class CaseController {
         String email = authentication.getName();
         User user = userService.getUserByEmail(email);
         List<Case> cases;
-        if (user.getRole().name().equals("ROLE_ADMIN")) {
+        if (user.getRole().name().equals("ADMIN")) {
             cases = caseService.getAllCases();
         } else {
             cases = caseService.getCasesByUser(user);

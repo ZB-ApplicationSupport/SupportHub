@@ -8,8 +8,9 @@ import { useAppContext } from "../context/AppContext";
 const DashboardLayout = () => {
   const mobileNav = useDisclosure();
   const { user } = useAppContext();
+  const token = localStorage.getItem("token");
 
-  if (!user) {
+  if (!user || !token) {
     return <Navigate to="/" replace />;
   }
 

@@ -1,24 +1,24 @@
-export const ROLES = ["Admin", "User"];
+export const ROLES = ["ADMIN", "USER"];
 
 export const NAV_ITEMS = [
-  { label: "Dashboard", path: "/dashboard", roles: ["Admin", "User"] },
-  { label: "Cases", path: "/cases", roles: ["Admin", "User"] },
+  { label: "Dashboard", path: "/dashboard", roles: ["ADMIN", "USER"] },
+  { label: "Cases", path: "/cases", roles: ["ADMIN", "USER"] },
   {
     label: "Knowledge Base",
     path: "/knowledge",
-    roles: ["Admin", "User"],
+    roles: ["ADMIN", "USER"],
   },
   {
     label: "Passwords",
     path: "/passwords",
-    roles: ["Admin", "User"],
+    roles: ["ADMIN", "USER"],
   },
   {
     label: "Supported Systems",
     path: "/systems",
-    roles: ["Admin"],
+    roles: ["ADMIN"],
   },
-  { label: "Users", path: "/users", roles: ["Admin"] },
+  { label: "Users", path: "/users", roles: ["ADMIN"] },
 ];
 
 export const STATUS_COLORS = {

@@ -88,7 +88,7 @@ const SignUp = () => {
             <Heading as="h2" size="lg" textAlign="center" mb={6} color={headingColor}>
                 Sign Up Request
             </Heading>
-            <form onSubmit={handleSubmit} aria-label="Login form">
+            <form onSubmit={handleSubmit} aria-label="Login form" autoComplete="off">
       <Stack spacing={4}>
         <FormControl isInvalid={usernameError} isRequired>
           <FormLabel color={labelColor}>Email</FormLabel>
@@ -98,7 +98,7 @@ const SignUp = () => {
             value={formState.username}
             onChange={handleChange}
             onBlur={() => setTouched((prev) => ({ ...prev, username: true }))}
-            autoComplete="username"
+            autoComplete="off"
           />
           <FormErrorMessage>Email is required.</FormErrorMessage>
         </FormControl>
@@ -111,7 +111,7 @@ const SignUp = () => {
             value={formState.password}
             onChange={handleChange}
             onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
-            autoComplete="current-password"
+            autoComplete="new-password"
           />
           <FormErrorMessage>Password is required.</FormErrorMessage>
         </FormControl>
@@ -124,7 +124,7 @@ const SignUp = () => {
             value={formState.confirmPassword || ""}
             onChange={handleChange}
             onBlur={() => setTouched((prev) => ({ ...prev, confirmPassword: true }))}
-            autoComplete="current-password"
+            autoComplete="new-password"
           />
           <FormErrorMessage>
             {confirmPasswordError

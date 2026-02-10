@@ -21,7 +21,7 @@ const UsersPage = () => {
   const { user } = useAppContext();
   const [users, setUsers] = useState(initialUsers);
   const [requests, setRequests] = useState(initialRequests);
-  const canEditRole = user?.role === "Admin";
+  const canEditRole = user?.role === "ADMIN";
 
   const handleApprove = (request) => {
     const nextUser = {

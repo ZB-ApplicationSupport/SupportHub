@@ -18,7 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class AdminController {
 
     private final UserService userService;
@@ -27,7 +27,7 @@ public class AdminController {
 
     @PostMapping("/users")
     public ResponseEntity<?> addUser(@Valid @RequestBody UserDTO userDTO) {
-        User newUser = userService.addUser(userDTO.getEmail(), userDTO.getTemporaryPassword(), Role.ROLE_USER);
+        User newUser = userService.addUser(userDTO.getEmail(), userDTO.getTemporaryPassword(), Role.USER);
         // Send invitation email with reset password link (generate token etc.)
         String resetLink = "http://frontend-url/reset-password?email=" + newUser.getEmail();
         String message = "You have been added. Please reset your password here: " + resetLink;
@@ -46,7 +46,7 @@ public class AdminController {
         SignupRequest request = signupRequestService.approveRequest(id);
         // Create user with temp password and send email
         String tempPassword = "Temp1234"; // generate securely in production
-        User user = userService.addUser(request.getEmail(), tempPassword, Role.ROLE_USER);
+        User user = userService.addUser(request.getEmail(), tempPassword, Role.USER);
         String resetLink = "http://frontend-url/reset-password?email=" + user.getEmail();
         String message = "Your signup request was approved. Please reset your password here: " + resetLink;
         emailService.sendEmail(user.getEmail(), "Signup Approved", message);

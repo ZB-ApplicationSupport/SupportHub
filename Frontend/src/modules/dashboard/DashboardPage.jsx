@@ -30,7 +30,7 @@ const DashboardPage = () => {
 
 
   const roleWidgets = {
-    Admin: [
+    ADMIN: [
       {
         title: "Service Level Health",
         description: "98.2% of cases within SLA thresholds.",
@@ -40,7 +40,7 @@ const DashboardPage = () => {
         description: "All escalated cases assigned to senior agents.",
       },
     ],
-    User: [
+    USER: [
       {
         title: "My Workload",
         description: "4 open cases assigned to you today.",
@@ -55,7 +55,9 @@ const DashboardPage = () => {
   return (
     <Stack spacing={6}>
       <Box>
-        <Heading size="lg">Welcome back, {user.name.split(" ")[0]}</Heading>
+        <Heading size="lg">
+          Welcome back, {user?.name ? user.name.split(" ")[0] : "there"}
+        </Heading>
       </Box>
 
       <DashboardOverview stats={stats} />

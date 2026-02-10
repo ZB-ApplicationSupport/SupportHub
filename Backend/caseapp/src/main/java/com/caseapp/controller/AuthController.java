@@ -9,8 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import java.util.Collection;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,7 +36,13 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = tokenProvider.generateToken(authentication);
-        return ResponseEntity.ok(new JwtAuthenticationResponse(jwt));
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        String role = authorities.stream()
+                .findFirst()
+                .map(GrantedAuthority::getAuthority)
+                .orElse("USER");
+
+        return ResponseEntity.ok(new JwtAuthenticationResponse(jwt, role));
     }
 
     @PostMapping("/forgot-password")

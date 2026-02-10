@@ -1,9 +1,11 @@
 package com.caseapp.service;
 
+import com.caseapp.dto.SignupRequestDTO;
 import com.caseapp.entity.SignupRequest;
 import com.caseapp.entity.enums.RequestStatus;
 import com.caseapp.repository.SignupRequestRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -18,12 +20,15 @@ public class SignupRequestService {
 
     private final SignupRequestRepository signupRequestRepository;
 
-    public SignupRequest createRequest(String email) {
-        if (signupRequestRepository.findByEmail(email).isPresent()) {
+    private final PasswordEncoder passwordEncoder;
+
+    public SignupRequest createRequest(SignupRequestDTO dto) {
+        if (signupRequestRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new RuntimeException("Signup request already exists for this email");
         }
         SignupRequest request = new SignupRequest();
-        request.setEmail(email);
+        request.setEmail(dto.getEmail());
+        request.setPassword(passwordEncoder.encode(dto.getPassword()));
         request.setStatus(RequestStatus.PENDING);
         request.setCreatedAt(LocalDateTime.now());
         return signupRequestRepository.save(request);

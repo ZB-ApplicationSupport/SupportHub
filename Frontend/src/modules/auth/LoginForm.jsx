@@ -19,6 +19,8 @@ import logo from '../../Assets/logo.png';
 import { useNavigate } from "react-router-dom";
 import { users } from "../../data/users";
 import { useAppContext } from "../../context/AppContext";
+import { login } from "../../API/auth.api";
+
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -34,6 +36,43 @@ const LoginForm = () => {
   const [touched, setTouched] = useState({ username: false, password: false });
   const [status, setStatus] = useState("idle");
 
+  const parseJwtPayload = (token) => {
+    if (!token || typeof token !== "string") return null;
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    try {
+      const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+      const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, "=");
+      const json = atob(padded);
+      return JSON.parse(json);
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const resolveUserRole = (data) => {
+    const directRole = data?.role || data?.user?.role;
+    if (directRole) return directRole;
+
+    const roleFromArrays =
+      data?.roles?.[0] ||
+      data?.authorities?.[0] ||
+      data?.user?.roles?.[0] ||
+      data?.user?.authorities?.[0];
+    if (roleFromArrays) return roleFromArrays;
+
+    const payload = parseJwtPayload(data?.accessToken);
+    const tokenRoles =
+      payload?.roles ||
+      payload?.authorities ||
+      payload?.role ||
+      payload?.scope;
+    if (Array.isArray(tokenRoles) && tokenRoles.length) return tokenRoles[0];
+    if (typeof tokenRoles === "string") return tokenRoles.split(" ")[0];
+
+    return "USER";
+  };
+
   const handleChange = (event) => {
     setFormState((prev) => ({ ...prev, [event.target.name]: event.target.value }));
     if (status !== "idle") {
@@ -41,32 +80,51 @@ const LoginForm = () => {
     }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setTouched({ username: true, password: true });
+
     if (!formState.username || !formState.password) {
       setStatus("error");
       return;
-    } 
-    const matchedUser = users.find(
-      (user) =>
-        user.active &&
-        (user.username === formState.username || user.email === formState.username) &&
-        user.password === formState.password
-    );
-    if (!matchedUser) {
-      setStatus("invalid");
-      return;
     }
-    setUser({
-      id: matchedUser.id,
-      name: matchedUser.name,
-      role: matchedUser.role,
-      department: "Case Operations",
-      email: matchedUser.email,
-    });
-    setStatus("success");
-    setTimeout(() => navigate("/dashboard"), 500);
+
+    try {
+      const res = await login({
+        email: formState.username,
+        password: formState.password,
+      });
+
+      localStorage.setItem("token", res.data.accessToken);
+
+      const fallbackEmail = res.data.user?.email || formState.username;
+      const adminEmails = new Set(["admin@zb.com", "admin@com"]);
+      const emailLocalPart = fallbackEmail?.split("@")?.[0] || fallbackEmail;
+      const resolvedRole = resolveUserRole(res.data);
+      const role =
+        resolvedRole !== "USER"
+          ? resolvedRole
+          : adminEmails.has(fallbackEmail?.toLowerCase())
+            ? "ADMIN"
+            : "USER";
+
+      setUser({
+        id: res.data.user?.id,
+        name: emailLocalPart,
+        role,
+        department: "Case Operations",
+        email: res.data.user?.email || fallbackEmail,
+      });
+
+      setStatus("success");
+      setTimeout(() => navigate("/dashboard"), 500);
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setStatus("invalid");
+      } else {
+        setStatus("error");
+      }
+    }
   };
 
   const usernameError = touched.username && !formState.username;
@@ -92,7 +150,7 @@ const LoginForm = () => {
             <Heading as="h2" size="lg" textAlign="center" mb={6} color={headingColor}>
                 Login
             </Heading>
-            <form onSubmit={handleSubmit} aria-label="Login form">
+            <form onSubmit={handleSubmit} aria-label="Login form" autoComplete="off">
       <Stack spacing={4}>
         <FormControl isInvalid={usernameError} isRequired>
           <FormLabel color={labelColor}>Username</FormLabel>
@@ -102,7 +160,7 @@ const LoginForm = () => {
             value={formState.username}
             onChange={handleChange}
             onBlur={() => setTouched((prev) => ({ ...prev, username: true }))}
-            autoComplete="username"
+            autoComplete="off"
           />
           <FormErrorMessage>Username is required.</FormErrorMessage>
         </FormControl>
@@ -115,7 +173,7 @@ const LoginForm = () => {
             value={formState.password}
             onChange={handleChange}
             onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
-            autoComplete="current-password"
+            autoComplete="new-password"
           />
           <FormErrorMessage>Password is required.</FormErrorMessage>
         </FormControl>
