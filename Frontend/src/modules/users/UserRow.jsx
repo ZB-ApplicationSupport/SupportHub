@@ -4,23 +4,19 @@ import RoleBadge from "./RoleBadge";
 import UserStatusToggle from "./UserStatusToggle";
 import { ROLES } from "../../utils/constants";
 
-const UserRow = ({ user, canEditRole, onRoleChange }) => {
+const UserRow = ({ user, canEditRole, onRoleChange, onToggleStatus }) => {
   return (
     <Tr>
       <Td>
-        <Text fontWeight="600">{user.name}</Text>
-        <Text fontSize="xs" color="text.muted">
-          {user.id}
-        </Text>
+        <Text fontWeight="600">{user.name || user.email}</Text> {/* fallback */}
       </Td>
-      <Td>{user.email}</Td>
       <Td>
         {canEditRole ? (
           <Select
             size="sm"
             value={user.role}
             onChange={(event) => onRoleChange(user, event.target.value)}
-            maxW="140px"
+            maxW="200px"
           >
             {ROLES.map((role) => (
               <option key={role} value={role}>
@@ -33,12 +29,16 @@ const UserRow = ({ user, canEditRole, onRoleChange }) => {
         )}
       </Td>
       <Td>
-        <Badge colorScheme={user.active ? "green" : "red"}>
-          {user.active ? "Active" : "Disabled"}
+        <Badge colorScheme={user.enabled ? "green" : "red"}>
+          {user.enabled ? "Active" : "Disabled"}
         </Badge>
+
       </Td>
       <Td>
-        <UserStatusToggle active={user.active} />
+        <UserStatusToggle 
+          active={user.enabled} 
+          onChange={() => onToggleStatus(user)}
+        />
       </Td>
     </Tr>
   );

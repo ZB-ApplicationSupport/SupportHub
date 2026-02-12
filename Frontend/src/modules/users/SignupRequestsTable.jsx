@@ -1,7 +1,7 @@
 import React from "react";
 import {
   Box,
-  Button,
+  IconButton,
   Table,
   TableContainer,
   Tbody,
@@ -10,38 +10,67 @@ import {
   Thead,
   Tr,
   Text,
+  Tooltip,
 } from "@chakra-ui/react";
+import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
 
-const SignupRequestsTable = ({ items, onApprove }) => {
+const SignupRequestsTable = ({ items, isLoading, onApprove, onReject }) => {
+  const formatDate = (value) => {
+    if (!value) return "--";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleString();
+  };
+
   return (
     <Box bg="surface.card" borderRadius="xl" borderWidth="1px">
       <TableContainer>
         <Table variant="simple">
           <Thead>
             <Tr>
-              <Th>Name</Th>
               <Th>Email</Th>
+              <Th>Status</Th>
               <Th>Requested At</Th>
               <Th>Actions</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {items.length === 0 ? (
+            {isLoading ? (
               <Tr>
-                <Td colSpan={5}>
+                <Td colSpan={4}>
+                  <Text color="text.muted">Loading signup requests...</Text>
+                </Td>
+              </Tr>
+            ) : items.length === 0 ? (
+              <Tr>
+                <Td colSpan={4}>
                   <Text color="text.muted">No pending signup requests.</Text>
                 </Td>
               </Tr>
             ) : (
               items.map((item) => (
                 <Tr key={item.id}>
-                  <Td>{item.name}</Td>
                   <Td>{item.email}</Td>
-                  <Td>{item.requestedAt}</Td>
+                  <Td>{item.status || "PENDING"}</Td>
+                  <Td>{formatDate(item.createdAt)}</Td>
                   <Td>
-                    <Button size="sm" onClick={() => onApprove(item)}>
-                      Approve
-                    </Button>
+                    <Tooltip label="Approve" aria-label="Approve">
+                      <IconButton
+                        icon={<CheckIcon />}
+                        colorScheme="green"
+                        size="sm"
+                        mr={2}
+                        onClick={() => onApprove(item)}
+                      />
+                    </Tooltip>
+                    <Tooltip label="Reject" aria-label="Reject">
+                      <IconButton
+                        icon={<CloseIcon />}
+                        colorScheme="red"
+                        size="sm"
+                        onClick={() => onReject(item)}
+                      />
+                    </Tooltip>
                   </Td>
                 </Tr>
               ))

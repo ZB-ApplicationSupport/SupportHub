@@ -1,10 +1,11 @@
 package com.caseapp.config;
 
+import com.caseapp.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,61 +13,63 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.caseapp.service.CustomUserDetailsService;
-
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtTokenProvider tokenProvider;
-
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
-
-//    @Override
-//    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-//            throws ServletException, IOException {
-//        String jwt = getJwtFromRequest(request);
-//
-//        if (jwt != null && tokenProvider.validateToken(jwt)) {
-//            String username = tokenProvider.getUsernameFromJWT(jwt);
-//
-//            UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-//
-//            UsernamePasswordAuthenticationToken authentication =
-//                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-//
-//            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-//
-//            SecurityContextHolder.getContext().setAuthentication(authentication);
-//        }
-//
-//        filterChain.doFilter(request, response);
-//    }
+    private final JwtTokenProvider tokenProvider;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
-        String path = request.getRequestURI();
+        try {
+            // 1. Extract JWT
+            String jwt = getJwtFromRequest(request);
 
-        // Skip login and signup requests
-        if (path.startsWith("/api/auth/") || path.startsWith("/api/signup-request/")) {
-            filterChain.doFilter(request, response);
-            return;
+            if (jwt != null && tokenProvider.validateToken(jwt)) {
+                // 2. Get username from JWT
+                String username = tokenProvider.getUsernameFromJWT(jwt);
+
+                // 3. Load user details
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+
+                // 4. Only proceed if user is enabled
+                if (userDetails.isEnabled()) {
+                    UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+
+                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+
+                    System.out.println("JWT authentication successful for user: " + username);
+                } else {
+                    System.out.println("User is disabled: " + username);
+                }
+            } else {
+                System.out.println("JWT missing or invalid");
+            }
+
+        } catch (Exception ex) {
+            System.out.println("JWT authentication error: " + ex.getMessage());
         }
 
-        // Existing JWT auth logic...
+        filterChain.doFilter(request, response);
     }
 
-
     private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+        String bearer = request.getHeader("Authorization");
+        if (bearer != null && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
         }
         return null;
     }

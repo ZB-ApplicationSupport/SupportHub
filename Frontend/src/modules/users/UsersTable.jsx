@@ -10,14 +10,13 @@ import {
 } from "@chakra-ui/react";
 import UserRow from "./UserRow";
 
-const UsersTable = ({ items, canEditRole, onRoleChange }) => {
+const UsersTable = ({ items, canEditRole, onRoleChange, onToggleStatus }) => {
   return (
     <Box bg="surface.card" borderRadius="xl" borderWidth="1px">
       <TableContainer>
         <Table variant="simple">
           <Thead>
             <Tr>
-              <Th>User</Th>
               <Th>Email</Th>
               <Th>Role</Th>
               <Th>Status</Th>
@@ -25,12 +24,13 @@ const UsersTable = ({ items, canEditRole, onRoleChange }) => {
             </Tr>
           </Thead>
           <Tbody>
-            {items.map((user) => (
+            {items.map((user, index) => (
               <UserRow
-                key={user.id}
+                key={user.id ?? index} // fallback to index if id is missing
                 user={user}
                 canEditRole={canEditRole}
                 onRoleChange={onRoleChange}
+                onToggleStatus={onToggleStatus}
               />
             ))}
           </Tbody>
