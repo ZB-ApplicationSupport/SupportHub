@@ -30,7 +30,7 @@ const DashboardPage = () => {
 
 
   const roleWidgets = {
-    Admin: [
+    ADMIN: [
       {
         title: "Service Level Health",
         description: "98.2% of cases within SLA thresholds.",
@@ -40,7 +40,7 @@ const DashboardPage = () => {
         description: "All escalated cases assigned to senior agents.",
       },
     ],
-    Agent: [
+    USER: [
       {
         title: "My Workload",
         description: "4 open cases assigned to you today.",
@@ -50,22 +50,14 @@ const DashboardPage = () => {
         description: "Prepare summary for 2 pending cases.",
       },
     ],
-    Viewer: [
-      {
-        title: "Visibility Summary",
-        description: "Read-only access to 12 cases in your scope.",
-      },
-      {
-        title: "Audit Readiness",
-        description: "Latest compliance report generated 2 days ago.",
-      },
-    ],
   };
 
   return (
     <Stack spacing={6}>
       <Box>
-        <Heading size="lg">Welcome back, {user.name.split(" ")[0]}</Heading>
+        <Heading size="lg">
+          Welcome back, {user?.name ? user.name.split(" ")[0] : "there"}
+        </Heading>
       </Box>
 
       <DashboardOverview stats={stats} />

@@ -73,13 +73,10 @@ const PasswordsPage = () => {
     <Stack spacing={6}>
       <Box>
         <Heading size="lg">Passwords</Heading>
-        <Text color="text.muted">
-          Centralized access references for shared systems and services.
-        </Text>
       </Box>
 
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} alignItems="center">
-        <InputGroup>
+        <InputGroup bgColor="white" borderRadius="md" boxShadow="sm">
           <InputLeftElement pointerEvents="none">
             <SearchIcon color="gray.400" />
           </InputLeftElement>

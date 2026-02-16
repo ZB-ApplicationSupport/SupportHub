@@ -12,11 +12,15 @@ import KnowledgeBasePage from "../modules/knowledge/KnowledgeBasePage";
 import KnowledgeBaseArticlePage from "../modules/knowledge/KnowledgeBaseArticlePage";
 import SystemsPage from "../modules/systems/SystemsPage";
 import PasswordsPage from "../modules/passwords/PasswordsPage";
+import SignUp from "../modules/auth/SignUp";
+import ForgotPassword from "../modules/auth/ForgotPassword";
 
 const AppRoutes = () => {
   return (
     <Routes>
         <Route path="/" element={<LoginForm />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/cases" element={<CasesPage />} />

@@ -22,7 +22,7 @@ public class DataSeeder {
                 User admin = User.builder()
                         .email("admin@zb.com")
                         .password(passwordEncoder.encode("Admin123"))
-                        .role(Role.ROLE_ADMIN)
+                        .role(Role.ADMIN)
                 // user.setRole(role);
                         .build();
                 userRepository.save(admin);
@@ -33,7 +33,7 @@ public class DataSeeder {
                 User user = User.builder()
                         .email("user@zb.com")
                         .password(passwordEncoder.encode("User123"))
-                        .role(Role.ROLE_USER)
+                        .role(Role.USER)
                         .build();
                 userRepository.save(user);
                 System.out.println("User created: user@zb.com / User123");

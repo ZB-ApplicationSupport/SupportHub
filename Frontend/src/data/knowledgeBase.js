@@ -200,8 +200,7 @@ settlement-cli resume --job "overnight-settlement"
     content: `# User access requests for incident consoles
 
 ## Access levels
-- Viewer
-- Responder
+- User
 - Admin
 
 ## Approval

@@ -69,13 +69,10 @@ const SystemsPage = () => {
     <Stack spacing={6}>
       <Box>
         <Heading size="lg">Supported Systems</Heading>
-        <Text color="text.muted">
-          Manage the list of platforms covered by case operations.
-        </Text>
       </Box>
 
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} alignItems="center">
-        <InputGroup>
+        <InputGroup bgColor="white" borderRadius="md" boxShadow="sm">
           <InputLeftElement pointerEvents="none">
             <SearchIcon color="gray.400" />
           </InputLeftElement>
@@ -89,6 +86,7 @@ const SystemsPage = () => {
           value={status}
           onChange={(event) => setStatus(event.target.value)}
           aria-label="Filter by status"
+          bgColor="white"
         >
           <option value="">All statuses</option>
           <option value="Active">Active</option>

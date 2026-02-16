@@ -1,14 +1,8 @@
-import React from "react";
+// UserStatusToggle.jsx
 import { Switch } from "@chakra-ui/react";
 
-const UserStatusToggle = ({ active }) => {
-  return (
-    <Switch
-      isChecked={active}
-      colorScheme="brand"
-      aria-label={active ? "User enabled" : "User disabled"}
-    />
-  );
+const UserStatusToggle = ({ active, onChange }) => {
+  return <Switch isChecked={active} onChange={onChange} />;
 };
 
 export default UserStatusToggle;
