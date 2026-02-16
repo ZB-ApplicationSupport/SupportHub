@@ -26,18 +26,24 @@ public class AdminController {
     private final SignupRequestService signupRequestService;
     private final EmailService emailService;
 
-    @PostMapping("/users")
+    @PostMapping("add/users")
     public ResponseEntity<?> addUser(@Valid @RequestBody UserDTO userDTO) {
         User newUser = userService.addUser(userDTO.getEmail(), userDTO.getTemporaryPassword(), Role.USER);
-        // Send invitation email with reset password link (generate token etc.)
-        String resetLink = "http://frontend-url/reset-password?email=" + newUser.getEmail();
-        String message = "You have been added. Please reset your password here: " + resetLink;
+
+        //Send email with account confirmation and login link
+        String loginLink = "http://frontend-url/login";
+        String message = "Your account was successfully created. Use this link to login: " + loginLink;
         emailService.sendEmail(newUser.getEmail(), "Account Created", message);
+
+        // Send invitation email with reset password link (generate token etc.)
+        // String resetLink = "http://frontend-url/reset-password?email=" + newUser.getEmail();
+        // String message = "You have been added. Please reset your password here: " + resetLink;
+        // emailService.sendEmail(newUser.getEmail(), "Account Created", message);
 
         return ResponseEntity.ok("User created and email sent");
     }
 
-    @GetMapping("/users")
+    @GetMapping("get/users")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<User> users = userService.getAllUsers();
 

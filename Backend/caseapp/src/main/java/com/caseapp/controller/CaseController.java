@@ -20,7 +20,7 @@ public class CaseController {
     private final CaseService caseService;
     private final UserService userService;
 
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<?> createCase(@Valid @RequestBody Case caseRequest, Authentication authentication) {
         String email = authentication.getName();
         User user = userService.getUserByEmail(email);
@@ -31,7 +31,7 @@ public class CaseController {
         return ResponseEntity.ok(createdCase);
     }
 
-    @GetMapping
+    @GetMapping("/get")
     public ResponseEntity<List<Case>> getUserCases(Authentication authentication) {
         String email = authentication.getName();
         User user = userService.getUserByEmail(email);
@@ -44,13 +44,13 @@ public class CaseController {
         return ResponseEntity.ok(cases);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/get/{id}")
     public ResponseEntity<Case> getCaseById(@PathVariable Long id) {
         Case caseEntity = caseService.getCaseById(id);
         return ResponseEntity.ok(caseEntity);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<Case> updateCase(@PathVariable Long id, @Valid @RequestBody Case updatedCase) {
         Case existingCase = caseService.getCaseById(id);
         existingCase.setTitle(updatedCase.getTitle());

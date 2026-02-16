@@ -2,7 +2,7 @@
 import api from "./axios"; // import your axios instance
 
 export const getUsers = async () => {
-  const response = await api.get("/admin/users"); // interceptor adds Authorization header
+  const response = await api.get("/admin/get/users"); // interceptor adds Authorization header
   return response.data;
 };
 
