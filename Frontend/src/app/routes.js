@@ -14,8 +14,6 @@ import SystemsPage from "../modules/systems/SystemsPage";
 import PasswordsPage from "../modules/passwords/PasswordsPage";
 import SignUp from "../modules/auth/SignUp";
 import ForgotPassword from "../modules/auth/ForgotPassword";
-import ResetPassword from "../modules/auth/ResetPassword";
-import ReportsPage from "../modules/reports/ReportsPage";
 
 const AppRoutes = () => {
   return (

@@ -119,7 +119,7 @@ const ForgotPassword = () => {
                   color="blue.500"
                   fontWeight="600"
                   cursor="pointer"
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/login")}
                 >
                   Back to login
                 </Text>
