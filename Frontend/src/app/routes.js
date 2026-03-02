@@ -14,6 +14,7 @@ import SystemsPage from "../modules/systems/SystemsPage";
 import PasswordsPage from "../modules/passwords/PasswordsPage";
 import SignUp from "../modules/auth/SignUp";
 import ForgotPassword from "../modules/auth/ForgotPassword";
+import ResetPassword from "../modules/auth/ResetPassword";
 
 const AppRoutes = () => {
   return (
@@ -21,6 +22,7 @@ const AppRoutes = () => {
         <Route path="/" element={<LoginForm />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/cases" element={<CasesPage />} />

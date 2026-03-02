@@ -12,61 +12,53 @@ import {
   Heading,
   Input,
   Stack,
-  Text,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../Assets/logo.png";
-import { requestPasswordReset } from "../../API/forgotPassword.api";
 
-
-const ForgotPassword = () => {
+const ResetPassword = () => {
   const navigate = useNavigate();
+
   const pageBg = useColorModeValue("gray.100", "slate.900");
   const cardBg = useColorModeValue("white", "slate.800");
   const headingColor = useColorModeValue("gray.700", "white");
   const labelColor = useColorModeValue("gray.700", "gray.200");
 
-  const [email, setEmail] = useState("");
+  const [email] = useState("lnyandoro@zb.co.zw"); // fixed, not editable
+  const [newPassword, setNewPassword] = useState("");
   const [touched, setTouched] = useState(false);
   const [status, setStatus] = useState("idle");
 
-  const handleSubmit = async (event) => {
-  event.preventDefault();
-  setTouched(true);
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    setTouched(true);
 
-  if (!email) {
-    setStatus("error");
-    return;
-  }
-
-  try {
-    setStatus("loading");
-
-    await requestPasswordReset(email);
+    if (!newPassword) {
+      setStatus("error");
+      return;
+    }
 
     setStatus("success");
     setTimeout(() => navigate("/"), 1200);
-  } catch (error) {
-    setStatus("error");
-  }
-};
+  };
 
-  const emailError = touched && !email;
+  const passwordError = touched && !newPassword;
 
   return (
     <Box>
       <Center minH="100vh" bg={pageBg} p={4} flexDirection="column">
-        <Box>
+        <Box textAlign="center">
           <img
             src={logo}
             alt="ZB Logo"
-            style={{ width: "100px", height: "100px", margin: "0 auto 20px auto" }}
+            style={{ width: "100px", height: "100px", marginBottom: "20px" }}
           />
-          <Heading as="h1" size="2xl" mb={50} color={headingColor}>
+          <Heading as="h1" size="2xl" mb={10} color={headingColor}>
             ZB Support Hub
           </Heading>
         </Box>
+
         <Box
           maxW="md"
           w="full"
@@ -75,55 +67,74 @@ const ForgotPassword = () => {
           borderRadius="lg"
           boxShadow="lg"
         >
-          <Heading as="h2" size="lg" textAlign="center" mb={6} color={headingColor}>
-            Forgot Password
+          <Heading
+            as="h2"
+            size="lg"
+            textAlign="center"
+            mb={6}
+            color={headingColor}
+          >
+            Reset Password
           </Heading>
-          <form onSubmit={handleSubmit} aria-label="Forgot password form" autoComplete="off">
+
+          <form onSubmit={handleSubmit} autoComplete="off">
             <Stack spacing={4}>
-              <FormControl isInvalid={emailError} isRequired>
+              <FormControl >
                 <FormLabel color={labelColor}>Email</FormLabel>
                 <Input
                   name="email"
-                  placeholder="Enter your email"
                   value={email}
+                  readOnly
+                  autoComplete="off"
+                />
+              </FormControl>
+
+              <FormControl isInvalid={passwordError} isRequired>
+                <FormLabel color={labelColor}>New Password</FormLabel>
+                <Input
+                  type="password"
+                  name="newPassword"
+                  placeholder="Enter your new password"
+                  value={newPassword}
                   onChange={(event) => {
-                    setEmail(event.target.value);
+                    setNewPassword(event.target.value);
                     if (status !== "idle") setStatus("idle");
                   }}
                   onBlur={() => setTouched(true)}
-                  autoComplete="off"
+                  autoComplete="new-password"
                 />
-                <FormErrorMessage>Email is required.</FormErrorMessage>
+                <FormErrorMessage>
+                  Password is required.
+                </FormErrorMessage>
               </FormControl>
+
+              {/* Alerts */}
               {status === "error" && (
                 <Alert status="error" borderRadius="md">
                   <AlertIcon />
-                  <AlertDescription>Please enter your email to continue.</AlertDescription>
+                  <AlertDescription>
+                    Please enter a new password.
+                  </AlertDescription>
                 </Alert>
               )}
+
               {status === "success" && (
                 <Alert status="success" borderRadius="md">
                   <AlertIcon />
                   <AlertDescription>
-                    Reset link sent (mocked). Check your email.
+                    Password has been reset successfully. Redirecting...
                   </AlertDescription>
                 </Alert>
               )}
-              <Button type="submit" size="lg" width="full" colorScheme="brand">
-                Send Reset Link
+
+              <Button
+                type="submit"
+                size="lg"
+                width="full"
+                colorScheme="brand"
+              >
+                Reset Password
               </Button>
-              <Text fontSize="sm" color={labelColor} textAlign="center">
-                Remembered your password?{" "}
-                <Text
-                  as="span"
-                  color="blue.500"
-                  fontWeight="600"
-                  cursor="pointer"
-                  onClick={() => navigate("/login")}
-                >
-                  Back to login
-                </Text>
-              </Text>
             </Stack>
           </form>
         </Box>
@@ -132,4 +143,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword;
+export default ResetPassword;
