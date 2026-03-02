@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -13,60 +13,80 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
-import { passwords as initialPasswords } from "../../data/passwords";
+import { getPasswords, createPassword } from "../../API/passwords.api";
 import PasswordsTable from "./PasswordsTable";
 import PasswordModal from "./PasswordModal";
 import { useAppContext } from "../../context/AppContext";
-
-const formatDate = (date) => {
-  const pad = (value) => String(value).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
-    date.getDate()
-  )} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-};
 
 const PasswordsPage = () => {
   const addModal = useDisclosure();
   const toast = useToast();
   const { user } = useAppContext();
   const [query, setQuery] = useState("");
-  const [passwords, setPasswords] = useState(initialPasswords);
+  const [passwords, setPasswords] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadPasswords = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getPasswords();
+      setPasswords(data || []);
+    } catch (err) {
+      toast({
+        title: "Failed to load passwords",
+        description: err.response?.data?.message || "Please try again.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      setPasswords([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    loadPasswords();
+  }, [loadPasswords]);
 
   const filteredPasswords = useMemo(() => {
-    const lowerQuery = query.toLowerCase();
+    const lowerQuery = (query || "").toLowerCase();
     return passwords.filter((item) => {
       if (!lowerQuery) return true;
       return (
-        item.server.toLowerCase().includes(lowerQuery) ||
-        item.username.toLowerCase().includes(lowerQuery) ||
-        item.hostname.toLowerCase().includes(lowerQuery)
+        (item.server || "").toLowerCase().includes(lowerQuery) ||
+        (item.username || "").toLowerCase().includes(lowerQuery) ||
+        (item.hostname || "").toLowerCase().includes(lowerQuery)
       );
     });
   }, [passwords, query]);
 
-  const handleSave = (formValues) => {
-    const now = formatDate(new Date());
-    const createdBy = user?.name || "Unknown";
-    const nextItem = {
-      id: `PWD-${String(passwords.length + 1).padStart(3, "0")}`,
-      server: formValues.server,
-      username: formValues.username,
-      password: formValues.password,
-      hostname: formValues.hostname,
-      createdAt: now,
-      updatedAt: now,
-      createdBy,
-      updatedBy: createdBy,
-    };
-    setPasswords((prev) => [nextItem, ...prev]);
-    toast({
-      title: "Password saved",
-      description: "The record has been added (mocked).",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    addModal.onClose();
+  const handleSave = async (formValues) => {
+    const createdBy = user?.name || user?.email || "Unknown";
+    try {
+      await createPassword({
+        ...formValues,
+        createdBy,
+        updatedBy: createdBy,
+      });
+      toast({
+        title: "Password saved",
+        description: "The record has been added.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      loadPasswords();
+      addModal.onClose();
+    } catch (err) {
+      toast({
+        title: "Failed to save password",
+        description: err.response?.data?.message || "Please try again.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    }
   };
 
   return (

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   FormControl,
@@ -13,7 +13,6 @@ import {
   Select,
   Stack,
   Text,
-  useToast,
 } from "@chakra-ui/react";
 
 const SystemFormModal = ({
@@ -23,18 +22,21 @@ const SystemFormModal = ({
   description,
   categories,
   initialValues,
+  onSave,
 }) => {
-  const toast = useToast();
+  const [values, setValues] = useState(initialValues || {});
 
-  const handleSave = () => {
-    toast({
-      title,
-      description: "Changes saved (mocked).",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    onClose();
+  useEffect(() => {
+    if (isOpen && initialValues) setValues(initialValues);
+  }, [isOpen, initialValues]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = () => {
+    onSave?.(values);
   };
 
   return (
@@ -54,11 +56,20 @@ const SystemFormModal = ({
           <Stack spacing={4}>
             <FormControl>
               <FormLabel>System name</FormLabel>
-              <Input defaultValue={initialValues.name} />
+              <Input
+                name="name"
+                value={values.name || ""}
+                onChange={handleChange}
+                placeholder="e.g. Core Banking"
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Category</FormLabel>
-              <Select defaultValue={initialValues.category}>
+              <Select
+                name="category"
+                value={values.category || categories[0]}
+                onChange={handleChange}
+              >
                 {categories.map((item) => (
                   <option key={item} value={item}>
                     {item}
@@ -68,11 +79,20 @@ const SystemFormModal = ({
             </FormControl>
             <FormControl>
               <FormLabel>Owner team</FormLabel>
-              <Input defaultValue={initialValues.owner} />
+              <Input
+                name="owner"
+                value={values.owner || ""}
+                onChange={handleChange}
+                placeholder="e.g. Case Operations"
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Status</FormLabel>
-              <Select defaultValue={initialValues.status}>
+              <Select
+                name="status"
+                value={values.status || "Active"}
+                onChange={handleChange}
+              >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </Select>
@@ -81,7 +101,7 @@ const SystemFormModal = ({
               <Button variant="ghost" onClick={onClose}>
                 Cancel
               </Button>
-              <Button colorScheme="brand" onClick={handleSave}>
+              <Button colorScheme="brand" onClick={handleSubmit}>
                 Save
               </Button>
             </Stack>

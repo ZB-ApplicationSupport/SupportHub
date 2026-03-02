@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   ModalBody,
@@ -14,19 +14,69 @@ import {
 } from "@chakra-ui/react";
 import ArticleForm from "./ArticleForm";
 import ArticleEditor from "./ArticleEditor";
+import { createArticle } from "../../API/knowledge.api";
 
-const CreateArticleModal = ({ isOpen, onClose, categories, systems }) => {
+const CreateArticleModal = ({ isOpen, onClose, categories, systems, onSuccess }) => {
   const toast = useToast();
+  const [submitting, setSubmitting] = useState(false);
+  const [values, setValues] = useState({
+    title: "",
+    system: "",
+    category: "",
+    tags: "",
+    readTime: "",
+    summary: "",
+    content: "",
+    isPublished: true,
+  });
 
-  const handleSave = () => {
-    toast({
-      title: "Article created",
-      description: "The article has been saved (mocked).",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    onClose();
+  useEffect(() => {
+    if (isOpen) {
+      setValues({
+        title: "",
+        system: systems?.[0] || "",
+        category: categories?.[0] || "",
+        tags: "",
+        readTime: "",
+        summary: "",
+        content: "",
+        isPublished: true,
+      });
+    }
+  }, [isOpen, systems, categories]);
+
+  const handleFormChange = (name, value) => {
+    setValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = async () => {
+    setSubmitting(true);
+    try {
+      const payload = {
+        ...values,
+        tags: values.tags ? values.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+      };
+      await createArticle(payload);
+      toast({
+        title: "Article created",
+        description: "The article has been saved.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      toast({
+        title: "Failed to create article",
+        description: err.response?.data?.message || "Please try again.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -44,13 +94,18 @@ const CreateArticleModal = ({ isOpen, onClose, categories, systems }) => {
         <ModalCloseButton />
         <ModalBody pb={6}>
           <Stack spacing={6}>
-            <ArticleForm categories={categories} systems={systems} />
-            <ArticleEditor />
+            <ArticleForm
+              categories={categories}
+              systems={systems}
+              values={values}
+              onChange={handleFormChange}
+            />
+            <ArticleEditor value={values.content} onChange={(v) => handleFormChange("content", v)} />
             <HStack justify="flex-end">
               <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button colorScheme="brand" onClick={handleSave}>
+              <Button colorScheme="brand" onClick={handleSave} isLoading={submitting} loadingText="Saving...">
                 Save Article
               </Button>
             </HStack>

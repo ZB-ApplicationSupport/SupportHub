@@ -28,7 +28,8 @@ public class AdminController {
 
     @PostMapping("add/users")
     public ResponseEntity<?> addUser(@Valid @RequestBody UserDTO userDTO) {
-        User newUser = userService.addUser(userDTO.getEmail(), userDTO.getTemporaryPassword(), Role.USER);
+        Role role = userDTO.getRole() != null ? userDTO.getRole() : Role.USER;
+        User newUser = userService.addUser(userDTO.getEmail(), userDTO.getTemporaryPassword(), role);
 
         //Send email with account confirmation and login link
         String loginLink = "http://frontend-url/login";

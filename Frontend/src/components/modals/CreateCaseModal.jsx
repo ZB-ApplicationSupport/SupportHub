@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Modal,
   ModalBody,
@@ -11,19 +11,36 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import CaseForm from "../../modules/cases/CaseForm";
+import { createCase } from "../../API/cases.api";
 
-const CreateCaseModal = ({ isOpen, onClose }) => {
+const CreateCaseModal = ({ isOpen, onClose, onSuccess }) => {
   const toast = useToast();
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    toast({
-      title: "Case created",
-      description: "The case has been saved (mocked).",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    onClose();
+  const handleSubmit = async (values) => {
+    setSubmitting(true);
+    try {
+      await createCase(values);
+      toast({
+        title: "Case created",
+        description: "The case has been saved.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      toast({
+        title: "Failed to create case",
+        description: err.response?.data?.message || "Please try again.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -52,6 +69,7 @@ const CreateCaseModal = ({ isOpen, onClose }) => {
             }}
             onSubmit={handleSubmit}
             submitLabel="Create Case"
+            isSubmitting={submitting}
           />
         </ModalBody>
       </ModalContent>

@@ -13,6 +13,7 @@ import {
   PopoverHeader,
   PopoverTrigger,
   Select,
+  Spinner,
   Table,
   TableContainer,
   Tbody,
@@ -34,7 +35,8 @@ const FilterFunnelIcon = (props) => (
 );
 
 const CasesTable = ({
-  items,
+  items = [],
+  isLoading = false,
   onOpenCase,
   onEditCase,
   query,
@@ -225,7 +227,14 @@ const CasesTable = ({
             </Tr>
           </Thead>
           <Tbody>
-            {items.length === 0 ? (
+            {isLoading ? (
+              <Tr>
+                <Td colSpan={7} py={8} textAlign="center">
+                  <Spinner size="lg" />
+                  <Text mt={2} color="text.muted">Loading cases...</Text>
+                </Td>
+              </Tr>
+            ) : items.length === 0 ? (
               <Tr>
                 <Td colSpan={7} py={6}>
                   <Text color="text.muted">No cases match this filter.</Text>

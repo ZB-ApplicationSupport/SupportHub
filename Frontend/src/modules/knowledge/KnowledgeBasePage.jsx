@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -9,6 +9,7 @@ import {
   Stack,
   Text,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
 import { AddIcon, ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import KnowledgeBaseSearch from "../../components/knowledge/KnowledgeBaseSearch";
@@ -17,19 +18,19 @@ import KnowledgeBaseSort from "../../components/knowledge/KnowledgeBaseSort";
 import KnowledgeBaseList from "../../components/knowledge/KnowledgeBaseList";
 import CreateArticleModal from "../../components/knowledge/CreateArticleModal";
 import EditArticleModal from "../../components/knowledge/EditArticleModal";
-import {
-  knowledgeArticles,
-  knowledgeCategories,
-  knowledgeTags,
-} from "../../data/knowledgeBase";
+import { getArticles } from "../../API/knowledge.api";
+import { knowledgeCategories, knowledgeTags } from "../../data/knowledgeBase";
 import {
   filterArticles,
   sortArticles,
 } from "../../utils/knowledgeBaseUtils";
 
 const KnowledgeBasePage = () => {
+  const toast = useToast();
   const createModal = useDisclosure();
   const editModal = useDisclosure();
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [system, setSystem] = useState("");
   const [category, setCategory] = useState("");
@@ -38,13 +39,36 @@ const KnowledgeBasePage = () => {
   const [view, setView] = useState("card");
   const [selectedArticle, setSelectedArticle] = useState(null);
 
+  const loadArticles = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getArticles();
+      setArticles(data || []);
+    } catch (err) {
+      toast({
+        title: "Failed to load articles",
+        description: err.response?.data?.message || "Please try again.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      setArticles([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    loadArticles();
+  }, [loadArticles]);
+
   const systems = useMemo(() => {
-    return Array.from(new Set(knowledgeArticles.map((item) => item.system)));
-  }, []);
+    return Array.from(new Set(articles.map((item) => item.system).filter(Boolean)));
+  }, [articles]);
 
   const filtered = useMemo(() => {
-    return filterArticles(knowledgeArticles, query, system, category, tag);
-  }, [query, system, category, tag]);
+    return filterArticles(articles, query, system, category, tag);
+  }, [articles, query, system, category, tag]);
 
   const sorted = useMemo(() => {
     return sortArticles(filtered, sortKey);
@@ -100,12 +124,14 @@ const KnowledgeBasePage = () => {
         onClose={createModal.onClose}
         categories={knowledgeCategories}
         systems={systems}
+        onSuccess={loadArticles}
       />
       <EditArticleModal
         isOpen={editModal.isOpen}
-        onClose={editModal.onClose}
+        onClose={() => { editModal.onClose(); setSelectedArticle(null); }}
         article={selectedArticle}
         systems={systems}
+        onSuccess={loadArticles}
       />
     </Stack>
   );

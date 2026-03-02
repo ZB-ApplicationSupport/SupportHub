@@ -1,9 +1,11 @@
 package com.caseapp.controller;
 
+import com.caseapp.dto.CaseDTO;
 import com.caseapp.entity.Case;
 import com.caseapp.entity.User;
 import com.caseapp.service.CaseService;
 import com.caseapp.service.UserService;
+import com.caseapp.util.CaseMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/cases")
@@ -21,18 +24,21 @@ public class CaseController {
     private final UserService userService;
 
     @PostMapping("/add")
-    public ResponseEntity<?> createCase(@Valid @RequestBody Case caseRequest, Authentication authentication) {
+    public ResponseEntity<CaseDTO> createCase(@Valid @RequestBody CaseDTO dto, Authentication authentication) {
         String email = authentication.getName();
         User user = userService.getUserByEmail(email);
-        caseRequest.setCreatedBy(user);
-        caseRequest.setCreatedAt(java.time.LocalDateTime.now());
-        caseRequest.setLastUpdatedAt(java.time.LocalDateTime.now());
-        Case createdCase = caseService.createCase(caseRequest);
-        return ResponseEntity.ok(createdCase);
+        Case entity = CaseMapper.toEntity(dto, user);
+        entity.setCreatedAt(java.time.LocalDateTime.now());
+        entity.setLastUpdatedAt(java.time.LocalDateTime.now());
+        if (entity.getOpenedAt() == null) {
+            entity.setOpenedAt(java.time.LocalDateTime.now());
+        }
+        Case created = caseService.createCase(entity);
+        return ResponseEntity.ok(CaseMapper.toDTO(created));
     }
 
     @GetMapping("/get")
-    public ResponseEntity<List<Case>> getUserCases(Authentication authentication) {
+    public ResponseEntity<List<CaseDTO>> getUserCases(Authentication authentication) {
         String email = authentication.getName();
         User user = userService.getUserByEmail(email);
         List<Case> cases;
@@ -41,24 +47,22 @@ public class CaseController {
         } else {
             cases = caseService.getCasesByUser(user);
         }
-        return ResponseEntity.ok(cases);
+        List<CaseDTO> dtos = cases.stream().map(CaseMapper::toDTO).collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/get/{id}")
-    public ResponseEntity<Case> getCaseById(@PathVariable Long id) {
+    public ResponseEntity<CaseDTO> getCaseById(@PathVariable Long id) {
         Case caseEntity = caseService.getCaseById(id);
-        return ResponseEntity.ok(caseEntity);
+        return ResponseEntity.ok(CaseMapper.toDTO(caseEntity));
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Case> updateCase(@PathVariable Long id, @Valid @RequestBody Case updatedCase) {
-        Case existingCase = caseService.getCaseById(id);
-        existingCase.setTitle(updatedCase.getTitle());
-        existingCase.setDescription(updatedCase.getDescription());
-        existingCase.setStatus(updatedCase.getStatus());
-        existingCase.setLastUpdatedAt(java.time.LocalDateTime.now());
-        Case savedCase = caseService.updateCase(existingCase);
-        return ResponseEntity.ok(savedCase);
+    public ResponseEntity<CaseDTO> updateCase(@PathVariable Long id, @Valid @RequestBody CaseDTO dto) {
+        Case existing = caseService.getCaseById(id);
+        CaseMapper.updateEntityFromDto(existing, dto);
+        existing.setLastUpdatedAt(java.time.LocalDateTime.now());
+        Case saved = caseService.updateCase(existing);
+        return ResponseEntity.ok(CaseMapper.toDTO(saved));
     }
-
 }

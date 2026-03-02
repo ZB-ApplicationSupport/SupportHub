@@ -1,14 +1,15 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Heading, SimpleGrid, Stack, Text } from "@chakra-ui/react";
 import { useAppContext } from "../../context/AppContext";
-import { cases } from "../../data/cases";
+import { getCases } from "../../API/cases.api";
 import { recentActivity } from "../../data/activity";
 import DashboardOverview from "./DashboardOverview";
 import CasesBySystemChart from "../../components/charts/CasesBySystemChart";
 
 const buildCasesBySystem = (items) => {
-  const map = items.reduce((acc, item) => {
-    acc[item.system] = (acc[item.system] || 0) + 1;
+  const map = (items || []).reduce((acc, item) => {
+    const sys = item.system || "Other";
+    acc[sys] = (acc[sys] || 0) + 1;
     return acc;
   }, {});
   return Object.keys(map).map((key) => ({ system: key, cases: map[key] }));
@@ -16,6 +17,13 @@ const buildCasesBySystem = (items) => {
 
 const DashboardPage = () => {
   const { user } = useAppContext();
+  const [cases, setCases] = useState([]);
+
+  useEffect(() => {
+    getCases()
+      .then(setCases)
+      .catch(() => setCases([]));
+  }, []);
 
   const stats = {
     total: cases.length,

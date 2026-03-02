@@ -1,15 +1,17 @@
 export const filterArticles = (items, query, system, category, tag) => {
   return items.filter((item) => {
+    const keywords = item.keywords || [];
     const matchesQuery =
       !query ||
-      item.title.toLowerCase().includes(query.toLowerCase()) ||
-      item.summary.toLowerCase().includes(query.toLowerCase()) ||
-      item.keywords.some((word) =>
-        word.toLowerCase().includes(query.toLowerCase())
+      (item.title || "").toLowerCase().includes(query.toLowerCase()) ||
+      (item.summary || "").toLowerCase().includes(query.toLowerCase()) ||
+      keywords.some((word) =>
+        String(word).toLowerCase().includes(query.toLowerCase())
       );
     const matchesSystem = !system || item.system === system;
     const matchesCategory = !category || item.category === category;
-    const matchesTag = !tag || item.tags.includes(tag);
+    const tags = item.tags || [];
+    const matchesTag = !tag || tags.includes(tag);
     return matchesQuery && matchesSystem && matchesCategory && matchesTag;
   });
 };

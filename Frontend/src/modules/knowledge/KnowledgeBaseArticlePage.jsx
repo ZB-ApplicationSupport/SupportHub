@@ -1,23 +1,38 @@
-import React, { useMemo } from "react";
-import { Box, Button, Stack, Text } from "@chakra-ui/react";
+import React, { useEffect, useState } from "react";
+import { Box, Button, Spinner, Stack, Text } from "@chakra-ui/react";
 import { Link, useParams } from "react-router-dom";
 import KnowledgeBaseArticle from "../../components/knowledge/KnowledgeBaseArticle";
-import {
-  knowledgeArticles,
-  knowledgeRelatedMap,
-} from "../../data/knowledgeBase";
-import { getRelatedArticles } from "../../utils/knowledgeBaseUtils";
+import { getArticleById } from "../../API/knowledge.api";
 
 const KnowledgeBaseArticlePage = () => {
   const { articleId } = useParams();
-  const article = knowledgeArticles.find((item) => item.id === articleId);
+  const [article, setArticle] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  const relatedItems = useMemo(() => {
-    if (!article) return [];
-    return getRelatedArticles(knowledgeArticles, knowledgeRelatedMap, article.id);
-  }, [article]);
+  useEffect(() => {
+    if (!articleId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(false);
+    getArticleById(articleId)
+      .then(setArticle)
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [articleId]);
 
-  if (!article) {
+  if (loading) {
+    return (
+      <Box py={8} textAlign="center">
+        <Spinner size="lg" />
+        <Text mt={2}>Loading article...</Text>
+      </Box>
+    );
+  }
+
+  if (error || !article) {
     return (
       <Box>
         <Text fontWeight="600" mb={3}>
@@ -32,7 +47,7 @@ const KnowledgeBaseArticlePage = () => {
 
   return (
     <Stack spacing={6}>
-      <KnowledgeBaseArticle article={article} relatedItems={relatedItems} />
+      <KnowledgeBaseArticle article={article} relatedItems={[]} />
     </Stack>
   );
 };

@@ -8,18 +8,33 @@ import {
   SimpleGrid,
 } from "@chakra-ui/react";
 
-const ArticleForm = ({ categories, systems }) => {
+const ArticleForm = ({ categories, systems, values = {}, onChange }) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    onChange?.(name, value);
+  };
+
   return (
     <Box bg="surface.card" borderWidth="1px" borderRadius="xl" p={6}>
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
         <FormControl>
           <FormLabel>Title</FormLabel>
-          <Input placeholder="Article title" />
+          <Input
+            name="title"
+            placeholder="Article title"
+            value={values.title || ""}
+            onChange={handleChange}
+          />
         </FormControl>
         <FormControl>
           <FormLabel>System</FormLabel>
-          <Select placeholder="Select system">
-            {systems.map((item) => (
+          <Select
+            name="system"
+            placeholder="Select system"
+            value={values.system || ""}
+            onChange={handleChange}
+          >
+            {(systems || []).map((item) => (
               <option key={item} value={item}>
                 {item}
               </option>
@@ -28,8 +43,13 @@ const ArticleForm = ({ categories, systems }) => {
         </FormControl>
         <FormControl>
           <FormLabel>Category</FormLabel>
-          <Select placeholder="Select category">
-            {categories.map((item) => (
+          <Select
+            name="category"
+            placeholder="Select category"
+            value={values.category || ""}
+            onChange={handleChange}
+          >
+            {(categories || []).map((item) => (
               <option key={item} value={item}>
                 {item}
               </option>
@@ -38,15 +58,30 @@ const ArticleForm = ({ categories, systems }) => {
         </FormControl>
         <FormControl>
           <FormLabel>Tags</FormLabel>
-          <Input placeholder="Add tags (comma separated)" />
+          <Input
+            name="tags"
+            placeholder="Add tags (comma separated)"
+            value={Array.isArray(values.tags) ? values.tags.join(", ") : (values.tags || "")}
+            onChange={handleChange}
+          />
         </FormControl>
         <FormControl>
           <FormLabel>Read time</FormLabel>
-          <Input placeholder="e.g. 5 min read" />
+          <Input
+            name="readTime"
+            placeholder="e.g. 5 min read"
+            value={values.readTime || ""}
+            onChange={handleChange}
+          />
         </FormControl>
         <FormControl>
           <FormLabel>Summary</FormLabel>
-          <Input placeholder="Short summary" />
+          <Input
+            name="summary"
+            placeholder="Short summary"
+            value={values.summary || ""}
+            onChange={handleChange}
+          />
         </FormControl>
       </SimpleGrid>
     </Box>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -61,31 +61,27 @@ const UsersPage = () => {
     };
   }, [toast]);
 
-  // Load users from backend
-  useEffect(() => {
-    let isMounted = true;
-    const loadUsers = async () => {
-      try {
-        const data = await getUsers(); // API call
-        if (isMounted) setUsers(data); // set state with backend users
-      } catch (error) {
-        toast({
-          title: "Failed to load users",
-          description:
-            error.response?.data?.message ||
-            error.response?.data ||
-            "Please try again.",
-          status: "error",
-          duration: 4000,
-          isClosable: true,
-        });
-      }
-    };
-    loadUsers();
-    return () => {
-      isMounted = false;
-    };
+  const loadUsers = useCallback(async () => {
+    try {
+      const data = await getUsers();
+      setUsers(data || []);
+    } catch (error) {
+      toast({
+        title: "Failed to load users",
+        description:
+          error.response?.data?.message ||
+          error.response?.data ||
+          "Please try again.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    }
   }, [toast]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const handleToggleStatus = async (user) => {
   try {
@@ -202,7 +198,7 @@ const UsersPage = () => {
         onToggleStatus={handleToggleStatus}
       />
 
-      <AddUserModal isOpen={addModal.isOpen} onClose={addModal.onClose} />
+      <AddUserModal isOpen={addModal.isOpen} onClose={addModal.onClose} onSuccess={loadUsers} />
 
       
     </Stack>
