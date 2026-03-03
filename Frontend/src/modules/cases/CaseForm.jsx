@@ -9,7 +9,7 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 
-const CaseForm = ({ initialValues, onSubmit, submitLabel }) => {
+const CaseForm = ({ initialValues, onSubmit, submitLabel, isSubmitting }) => {
   const [values, setValues] = React.useState(initialValues);
 
   const handleChange = (event) => {
@@ -88,7 +88,7 @@ const CaseForm = ({ initialValues, onSubmit, submitLabel }) => {
             placeholder="e.g. VEND-FIS-3321"
           />
         </FormControl>
-        <Button type="submit" size="lg">
+        <Button type="submit" size="lg" isLoading={isSubmitting} loadingText="Saving...">
           {submitLabel}
         </Button>
       </Stack>

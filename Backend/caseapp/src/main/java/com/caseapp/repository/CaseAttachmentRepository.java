@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface CaseAttachmentRepository extends JpaRepository<CaseAttachment, Long> {
-    List<CaseAttachment> findByACaseId(Long caseId);
+    List<CaseAttachment> findByaCaseId(Long caseId);
 }

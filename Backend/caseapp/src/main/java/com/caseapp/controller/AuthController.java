@@ -1,8 +1,10 @@
 package com.caseapp.controller;
 
 import com.caseapp.config.JwtTokenProvider;
+import com.caseapp.dto.ForgotPasswordRequest;
 import com.caseapp.dto.LoginRequest;
 import com.caseapp.dto.JwtAuthenticationResponse;
+import com.caseapp.dto.ResetPasswordRequest;
 import com.caseapp.service.PasswordResetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,16 +48,14 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
-        passwordResetService.createPasswordResetToken(email);
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.createPasswordResetToken(request.getEmail());
         return ResponseEntity.ok("Password reset email sent if user exists");
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(
-            @RequestParam String token,
-            @RequestParam String newPassword) {
-        passwordResetService.resetPassword(token, newPassword);
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok("Password successfully changed");
     }
 }

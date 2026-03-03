@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Modal,
   ModalBody,
@@ -11,21 +11,38 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import CaseForm from "../../modules/cases/CaseForm";
+import { updateCase } from "../../API/cases.api";
 
-const EditCaseModal = ({ isOpen, onClose, item }) => {
+const EditCaseModal = ({ isOpen, onClose, item, onSuccess }) => {
   const toast = useToast();
+  const [submitting, setSubmitting] = useState(false);
 
   if (!item) return null;
 
-  const handleSubmit = () => {
-    toast({
-      title: "Case updated",
-      description: "The case has been updated (mocked).",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    onClose();
+  const handleSubmit = async (values) => {
+    setSubmitting(true);
+    try {
+      await updateCase(item.id, values);
+      toast({
+        title: "Case updated",
+        description: "The case has been updated.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      toast({
+        title: "Failed to update case",
+        description: err.response?.data?.message || "Please try again.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -43,17 +60,19 @@ const EditCaseModal = ({ isOpen, onClose, item }) => {
         <ModalCloseButton />
         <ModalBody pb={6}>
           <CaseForm
+            key={item.id}
             initialValues={{
               summary: item.summary,
               description: item.description,
               system: item.system,
               priority: item.priority,
               status: item.status,
-              jiraRefs: item.jiraRefs ? item.jiraRefs.join(", ") : "",
-              vendorRefs: item.vendorRefs ? item.vendorRefs.join(", ") : "",
+              jiraRefs: item.jiraRefs ? (Array.isArray(item.jiraRefs) ? item.jiraRefs.join(", ") : item.jiraRefs) : "",
+              vendorRefs: item.vendorRefs ? (Array.isArray(item.vendorRefs) ? item.vendorRefs.join(", ") : item.vendorRefs) : "",
             }}
             onSubmit={handleSubmit}
             submitLabel="Save Changes"
+            isSubmitting={submitting}
           />
         </ModalBody>
       </ModalContent>

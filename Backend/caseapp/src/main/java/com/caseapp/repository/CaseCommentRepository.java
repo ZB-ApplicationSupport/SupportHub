@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface CaseCommentRepository extends JpaRepository<CaseComment, Long> {
-    List<CaseComment> findByACaseId(Long caseId);
+    List<CaseComment> findByaCaseId(Long caseId);
 }

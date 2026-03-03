@@ -17,6 +17,8 @@ import {
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../Assets/logo.png";
+import { requestPasswordReset } from "../../API/forgotPassword.api";
+
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -29,16 +31,26 @@ const ForgotPassword = () => {
   const [touched, setTouched] = useState(false);
   const [status, setStatus] = useState("idle");
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    setTouched(true);
-    if (!email) {
-      setStatus("error");
-      return;
-    }
+  const handleSubmit = async (event) => {
+  event.preventDefault();
+  setTouched(true);
+
+  if (!email) {
+    setStatus("error");
+    return;
+  }
+
+  try {
+    setStatus("loading");
+
+    await requestPasswordReset(email);
+
     setStatus("success");
     setTimeout(() => navigate("/"), 1200);
-  };
+  } catch (error) {
+    setStatus("error");
+  }
+};
 
   const emailError = touched && !email;
 
@@ -93,7 +105,7 @@ const ForgotPassword = () => {
                 <Alert status="success" borderRadius="md">
                   <AlertIcon />
                   <AlertDescription>
-                    Reset link sent (mocked). Check your email.
+                    If an account exists for this email, a reset link has been sent. Check your email.
                   </AlertDescription>
                 </Alert>
               )}
@@ -107,7 +119,7 @@ const ForgotPassword = () => {
                   color="blue.500"
                   fontWeight="600"
                   cursor="pointer"
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/login")}
                 >
                   Back to login
                 </Text>

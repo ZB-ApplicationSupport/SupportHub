@@ -19,6 +19,7 @@ export const NAV_ITEMS = [
     roles: ["ADMIN"],
   },
   { label: "Users", path: "/users", roles: ["ADMIN"] },
+  { label: "Reports", path: "/reports", roles: ["ADMIN", "USER"] },
 ];
 
 export const STATUS_COLORS = {

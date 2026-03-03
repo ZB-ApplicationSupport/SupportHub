@@ -11,7 +11,11 @@ import {
   Text,
 } from "@chakra-ui/react";
 
-const SystemDeleteModal = ({ isOpen, onClose, systemName }) => {
+const SystemDeleteModal = ({ isOpen, onClose, systemName, onConfirm }) => {
+  const handleRemove = () => {
+    onConfirm?.();
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
       <ModalOverlay />
@@ -24,14 +28,14 @@ const SystemDeleteModal = ({ isOpen, onClose, systemName }) => {
             <Text as="span" fontWeight="600">
               {systemName}
             </Text>{" "}
-            from supported systems? This is a UI-only action.
+            from supported systems?
           </Text>
         </ModalBody>
         <ModalFooter>
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button colorScheme="red" onClick={onClose} ml={3}>
+          <Button colorScheme="red" onClick={handleRemove} ml={3}>
             Remove
           </Button>
         </ModalFooter>

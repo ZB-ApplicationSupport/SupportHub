@@ -14,6 +14,8 @@ import SystemsPage from "../modules/systems/SystemsPage";
 import PasswordsPage from "../modules/passwords/PasswordsPage";
 import SignUp from "../modules/auth/SignUp";
 import ForgotPassword from "../modules/auth/ForgotPassword";
+import ResetPassword from "../modules/auth/ResetPassword";
+import ReportsPage from "../modules/reports/ReportsPage";
 
 const AppRoutes = () => {
   return (
@@ -21,6 +23,7 @@ const AppRoutes = () => {
         <Route path="/" element={<LoginForm />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/cases" element={<CasesPage />} />
@@ -31,6 +34,7 @@ const AppRoutes = () => {
         <Route path="/systems" element={<SystemsPage />} />
         <Route path="/passwords" element={<PasswordsPage />} />
         <Route path="/users" element={<UsersPage />} />
+        <Route path="/reports" element={<ReportsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
