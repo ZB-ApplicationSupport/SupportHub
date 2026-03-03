@@ -39,7 +39,6 @@ const ArticleHeader = ({ article }) => {
         {article.summary}
       </Text>
       <HStack spacing={2} flexWrap="wrap">
-        <Badge colorScheme="brand">{article.category}</Badge>
         <Badge colorScheme="secondary">{article.system}</Badge>
         {article.tags.map((tag) => (
           <Badge key={tag} variant="subtle" colorScheme="gray">
@@ -49,14 +48,6 @@ const ArticleHeader = ({ article }) => {
       </HStack>
       <HStack spacing={4} color="text.muted" fontSize="sm" mt={3}>
         <Text>Updated {article.updatedAt}</Text>
-        <Text>{article.readTime}</Text>
-        <HStack spacing={1}>
-          <Icon as={StarIcon} color="yellow.400" />
-          <Text>
-            {article.rating} ({article.ratingCount})
-          </Text>
-        </HStack>
-        <Text>{article.views} views</Text>
       </HStack>
       <Stack spacing={2} mt={4}>
         <HStack spacing={2} flexWrap="wrap">

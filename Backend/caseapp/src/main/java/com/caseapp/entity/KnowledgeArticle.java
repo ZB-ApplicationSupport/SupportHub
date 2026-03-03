@@ -40,4 +40,7 @@ public class KnowledgeArticle {
 
     @Column(columnDefinition = "TEXT")
     private String keywords;
+
+    @Column(columnDefinition = "TEXT")
+    private String content;
 }

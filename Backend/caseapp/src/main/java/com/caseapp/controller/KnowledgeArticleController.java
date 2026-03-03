@@ -15,14 +15,12 @@ public class KnowledgeArticleController {
 
     private final KnowledgeArticleService service;
 
-//    @GetMapping
-//    public ResponseEntity<List<KnowledgeArticle>> getAll(
-//            @RequestParam(required = false) Boolean publishedOnly) {
-//        if (Boolean.TRUE.equals(publishedOnly)) {
-//            return ResponseEntity.ok(service.findPublished());
-//        }
-//        return ResponseEntity.ok(service.findAll());
-//    }
+    @GetMapping
+    public ResponseEntity<List<KnowledgeArticle>> getAll(
+            @RequestParam(required = false) Boolean publishedOnly) {
+        // Currently we only have findAll implemented; publishedOnly is ignored for now
+        return ResponseEntity.ok(service.findAll());
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<KnowledgeArticle> getById(@PathVariable Long id) {

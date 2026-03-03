@@ -8,7 +8,7 @@ import {
   SimpleGrid,
 } from "@chakra-ui/react";
 
-const ArticleForm = ({ categories, systems, values = {}, onChange }) => {
+const ArticleForm = ({ systems, values = {}, onChange }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     onChange?.(name, value);
@@ -35,21 +35,6 @@ const ArticleForm = ({ categories, systems, values = {}, onChange }) => {
             onChange={handleChange}
           >
             {(systems || []).map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl>
-          <FormLabel>Category</FormLabel>
-          <Select
-            name="category"
-            placeholder="Select category"
-            value={values.category || ""}
-            onChange={handleChange}
-          >
-            {(categories || []).map((item) => (
               <option key={item} value={item}>
                 {item}
               </option>

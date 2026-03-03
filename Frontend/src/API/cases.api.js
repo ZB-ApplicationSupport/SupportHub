@@ -1,15 +1,33 @@
 import api from "./axios";
 
+// Map backend enum values to display labels
 const statusToDisplay = (s) => {
   if (!s) return "";
-  const map = { OPEN: "Open", PENDING: "Pending", ESCALATED: "Escalated", CLOSED: "Closed" };
+  const map = {
+    OPEN: "Open",
+    PENDING: "Pending",
+    ESCALATED: "Escalated",
+    CLOSED: "Closed",
+    WAITING_FOR_VENDOR: "Waiting for vendor",
+    WAITING_FOR_BANK: "Waiting for bank",
+    IN_PROGRESS: "In progress",
+  };
   return map[s] || s;
 };
 
+// Map display labels / loose input back to backend enum values
 const statusToApi = (s) => {
   if (!s) return "";
-  const map = { Open: "OPEN", Pending: "PENDING", Escalated: "ESCALATED", Closed: "CLOSED" };
-  return map[s] || (s && s.toUpperCase());
+  const map = {
+    Open: "OPEN",
+    Pending: "PENDING",
+    Escalated: "ESCALATED",
+    Closed: "CLOSED",
+    "Waiting for vendor": "WAITING_FOR_VENDOR",
+    "Waiting for bank": "WAITING_FOR_BANK",
+    "In progress": "IN_PROGRESS",
+  };
+  return map[s] || s.toString().toUpperCase().replace(" ", "_");
 };
 
 /** Map backend case to frontend shape (id as string for table, status display, dates, refs) */
@@ -18,18 +36,22 @@ export const mapCaseFromApi = (c) => {
   const openedAt = c.openedAt
     ? new Date(c.openedAt).toISOString().slice(0, 10)
     : (c.createdAt ? new Date(c.createdAt).toISOString().slice(0, 10) : "");
+
+  const jiraRefs = Array.isArray(c.jiraRefs) ? c.jiraRefs : [];
+  const vendorRefs = Array.isArray(c.vendorRefs) ? c.vendorRefs : [];
+
   return {
     id: c.id != null ? String(c.id) : "",
     caseId: c.id,
-    system: c.system || "",
-    status: statusToDisplay(c.status) || c.status || "Open",
+    system: c.systemName || c.system || "",
+    status: statusToDisplay(c.status) || "Open",
     priority: c.priority || "Medium",
     assignedTo: c.assignedTo || "Unassigned",
     openedAt,
     summary: c.summary || c.title || "",
     description: c.description || "",
-    jiraRefs: Array.isArray(c.jiraRefs) ? c.jiraRefs : [],
-    vendorRefs: Array.isArray(c.vendorRefs) ? c.vendorRefs : [],
+    jiraRefs,
+    vendorRefs,
     createdAt: c.createdAt,
     lastUpdatedAt: c.lastUpdatedAt,
     createdByEmail: c.createdByEmail,
@@ -41,14 +63,16 @@ export const mapCaseToApi = (c) => {
   const jiraRefs = typeof c.jiraRefs === "string"
     ? c.jiraRefs.split(",").map((x) => x.trim()).filter(Boolean)
     : (Array.isArray(c.jiraRefs) ? c.jiraRefs : []);
+
   const vendorRefs = typeof c.vendorRefs === "string"
     ? c.vendorRefs.split(",").map((x) => x.trim()).filter(Boolean)
     : (Array.isArray(c.vendorRefs) ? c.vendorRefs : []);
+
   return {
     title: c.summary || c.title || "",
     summary: c.summary || c.title || "",
     description: c.description || "",
-    system: c.system || "",
+    systemName: c.system || "",
     priority: c.priority || "Medium",
     assignedTo: c.assignedTo || "Unassigned",
     status: statusToApi(c.status) || "OPEN",

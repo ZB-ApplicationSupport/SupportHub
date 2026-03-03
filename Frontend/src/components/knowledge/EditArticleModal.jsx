@@ -14,21 +14,17 @@ import {
 } from "@chakra-ui/react";
 import ArticleForm from "./ArticleForm";
 import ArticleEditor from "./ArticleEditor";
-import ArticleStatusToggle from "./ArticleStatusToggle";
 import { updateArticle } from "../../API/knowledge.api";
 
-const EditArticleModal = ({ isOpen, onClose, article, categories, systems, onSuccess }) => {
+const EditArticleModal = ({ isOpen, onClose, article, systems, onSuccess }) => {
   const toast = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [values, setValues] = useState({
     title: "",
     system: "",
-    category: "",
     tags: "",
-    readTime: "",
     summary: "",
     content: "",
-    isPublished: true,
   });
 
   useEffect(() => {
@@ -36,22 +32,15 @@ const EditArticleModal = ({ isOpen, onClose, article, categories, systems, onSuc
       setValues({
         title: article.title || "",
         system: article.system || "",
-        category: article.category || "",
         tags: Array.isArray(article.tags) ? article.tags.join(", ") : (article.tags || ""),
-        readTime: article.readTime || "",
         summary: article.summary || "",
         content: article.content || "",
-        isPublished: article.isPublished !== false,
       });
     }
   }, [isOpen, article]);
 
   const handleFormChange = (name, value) => {
     setValues((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleTogglePublish = () => {
-    setValues((prev) => ({ ...prev, isPublished: !prev.isPublished }));
   };
 
   const handleSave = async () => {
@@ -104,17 +93,8 @@ const EditArticleModal = ({ isOpen, onClose, article, categories, systems, onSuc
           <Stack spacing={6}>
             <HStack justify="space-between">
               <Text fontWeight="600">{article.title}</Text>
-              <ArticleStatusToggle
-                isPublished={values.isPublished}
-                onToggle={handleTogglePublish}
-              />
             </HStack>
-            <ArticleForm
-              categories={categories}
-              systems={systems}
-              values={values}
-              onChange={handleFormChange}
-            />
+            <ArticleForm systems={systems} values={values} onChange={handleFormChange} />
             <ArticleEditor value={values.content} onChange={(v) => handleFormChange("content", v)} />
             <HStack justify="flex-end">
               <Button variant="outline" onClick={onClose}>

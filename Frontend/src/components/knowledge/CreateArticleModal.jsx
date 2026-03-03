@@ -16,18 +16,15 @@ import ArticleForm from "./ArticleForm";
 import ArticleEditor from "./ArticleEditor";
 import { createArticle } from "../../API/knowledge.api";
 
-const CreateArticleModal = ({ isOpen, onClose, categories, systems, onSuccess }) => {
+const CreateArticleModal = ({ isOpen, onClose, systems, onSuccess }) => {
   const toast = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [values, setValues] = useState({
     title: "",
     system: "",
-    category: "",
     tags: "",
-    readTime: "",
     summary: "",
     content: "",
-    isPublished: true,
   });
 
   useEffect(() => {
@@ -35,15 +32,12 @@ const CreateArticleModal = ({ isOpen, onClose, categories, systems, onSuccess })
       setValues({
         title: "",
         system: systems?.[0] || "",
-        category: categories?.[0] || "",
         tags: "",
-        readTime: "",
         summary: "",
         content: "",
-        isPublished: true,
       });
     }
-  }, [isOpen, systems, categories]);
+  }, [isOpen, systems]);
 
   const handleFormChange = (name, value) => {
     setValues((prev) => ({ ...prev, [name]: value }));
@@ -94,12 +88,7 @@ const CreateArticleModal = ({ isOpen, onClose, categories, systems, onSuccess })
         <ModalCloseButton />
         <ModalBody pb={6}>
           <Stack spacing={6}>
-            <ArticleForm
-              categories={categories}
-              systems={systems}
-              values={values}
-              onChange={handleFormChange}
-            />
+            <ArticleForm systems={systems} values={values} onChange={handleFormChange} />
             <ArticleEditor value={values.content} onChange={(v) => handleFormChange("content", v)} />
             <HStack justify="flex-end">
               <Button variant="outline" onClick={onClose}>

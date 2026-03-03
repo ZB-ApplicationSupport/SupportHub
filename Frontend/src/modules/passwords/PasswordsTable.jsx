@@ -65,10 +65,10 @@ const PasswordsTable = ({ items }) => {
         <Table variant="simple">
           <Thead>
             <Tr>
+              <Th>Hostname</Th>
               <Th>Server IP</Th>
               <Th>Username</Th>
               <Th>Password</Th>
-              <Th>Hostname</Th>
               <Th>Date Added</Th>
               <Th>Last Modified</Th>
               <Th>Created By</Th>
@@ -85,6 +85,7 @@ const PasswordsTable = ({ items }) => {
             ) : (
               items.map((item) => (
                 <Tr key={item.id}>
+                  <Td>{item.hostname}</Td>
                   <Td>{item.server}</Td>
                   <Td>{item.username}</Td>
                   <Td
@@ -96,7 +97,6 @@ const PasswordsTable = ({ items }) => {
                   >
                     {item.password}
                   </Td>
-                  <Td>{item.hostname}</Td>
                   <Td>{item.createdAt}</Td>
                   <Td>{item.updatedAt}</Td>
                   <Td>{item.createdBy}</Td>

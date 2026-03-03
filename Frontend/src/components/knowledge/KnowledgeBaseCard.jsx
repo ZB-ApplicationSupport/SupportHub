@@ -30,7 +30,6 @@ const KnowledgeBaseCard = ({
         </Text>
       </Stack>
       <HStack spacing={2} flexWrap="wrap">
-        <Badge colorScheme="brand">{item.category}</Badge>
         <Badge colorScheme="secondary">{item.system}</Badge>
         {item.tags.map((tag) => (
           <Badge key={tag} variant="subtle" colorScheme="gray">
@@ -40,14 +39,6 @@ const KnowledgeBaseCard = ({
       </HStack>
       <HStack spacing={4} color="text.muted" fontSize="xs" flexWrap="wrap">
         <Text>{item.updatedAt}</Text>
-        <Text>{item.readTime}</Text>
-        <HStack spacing={1}>
-          <Icon as={StarIcon} color="yellow.400" />
-          <Text>
-            {item.rating} ({item.ratingCount})
-          </Text>
-        </HStack>
-        <Text>{item.views} views</Text>
       </HStack>
       <HStack spacing={2} flexWrap="wrap">
         <Badge

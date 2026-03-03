@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,24 +28,28 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
+            );
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(),
-                        loginRequest.getPassword()
-                )
-        );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = tokenProvider.generateToken(authentication);
+            Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+            String role = authorities.stream()
+                    .findFirst()
+                    .map(GrantedAuthority::getAuthority)
+                    .orElse("USER");
 
-        String jwt = tokenProvider.generateToken(authentication);
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        String role = authorities.stream()
-                .findFirst()
-                .map(GrantedAuthority::getAuthority)
-                .orElse("USER");
-
-        return ResponseEntity.ok(new JwtAuthenticationResponse(jwt, role));
+            return ResponseEntity.ok(new JwtAuthenticationResponse(jwt, role));
+        } catch (AuthenticationException ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(401).body("Invalid email or password");
+        }
     }
 
     @PostMapping("/forgot-password")

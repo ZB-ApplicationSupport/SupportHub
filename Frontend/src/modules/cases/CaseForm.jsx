@@ -68,6 +68,9 @@ const CaseForm = ({ initialValues, onSubmit, submitLabel, isSubmitting }) => {
             <option value="Pending">Pending</option>
             <option value="Escalated">Escalated</option>
             <option value="Closed">Closed</option>
+            <option value="Waiting for vendor">Waiting for vendor</option>
+            <option value="Waiting for bank">Waiting for bank</option>
+            <option value="In progress">In progress</option>
           </Select>
         </FormControl>
         <FormControl>

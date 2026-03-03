@@ -15,19 +15,13 @@ export const mapArticleFromApi = (a) => {
     numericId: a.id,
     title: a.title || "",
     summary: a.summary || "",
-    system: a.system || "",
-    category: a.category || "",
+    system: a.systemName || "",
     tags: splitStr(a.tags),
     updatedAt: formatDate(a.updatedAt),
-    readTime: a.readTime || "",
-    views: a.views ?? 0,
-    rating: a.rating ?? 0,
-    ratingCount: a.ratingCount ?? 0,
     caseRef: a.caseRef || "",
     jiraRefs: splitStr(a.jiraRefs),
     vendorRefs: splitStr(a.vendorRefs),
     keywords: splitStr(a.keywords),
-    isPublished: a.isPublished !== false,
     content: a.content || "",
   };
 };
@@ -35,19 +29,13 @@ export const mapArticleFromApi = (a) => {
 export const mapArticleToApi = (a) => ({
   title: a.title,
   summary: a.summary,
-  system: a.system,
-  category: a.category,
+  systemName: a.system,
   tags: Array.isArray(a.tags) ? a.tags.join(", ") : a.tags,
-  content: a.content,
-  isPublished: a.isPublished !== false,
   caseRef: a.caseRef,
   jiraRefs: Array.isArray(a.jiraRefs) ? a.jiraRefs.join(", ") : a.jiraRefs,
   vendorRefs: Array.isArray(a.vendorRefs) ? a.vendorRefs.join(", ") : a.vendorRefs,
   keywords: Array.isArray(a.keywords) ? a.keywords.join(", ") : a.keywords,
-  views: a.views,
-  rating: a.rating,
-  ratingCount: a.ratingCount,
-  readTime: a.readTime,
+  content: a.content,
 });
 
 export const getArticles = async (publishedOnly = false) => {
