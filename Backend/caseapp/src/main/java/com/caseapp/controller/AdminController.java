@@ -37,7 +37,7 @@ public class AdminController {
         emailService.sendEmail(newUser.getEmail(), "Account Created", message);
 
         //Send invitation email with reset password link (generate token etc.)
-        String resetLink = "http://frontend-url/reset-password?email=" + newUser.getEmail();
+        //String resetLink = "http://frontend-url/reset-password?email=" + newUser.getEmail();
         //String message = "You have been added. Please reset your password here: " + resetLink;
         // emailService.sendEmail(newUser.getEmail(), "Account Created", message);
 
