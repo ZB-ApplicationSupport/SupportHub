@@ -4,13 +4,10 @@ import api from "./axios";
 const statusToDisplay = (s) => {
   if (!s) return "";
   const map = {
-    OPEN: "Open",
-    PENDING: "Pending",
-    ESCALATED: "Escalated",
-    CLOSED: "Closed",
-    WAITING_FOR_VENDOR: "Waiting for vendor",
-    WAITING_FOR_BANK: "Waiting for bank",
     IN_PROGRESS: "In progress",
+    AWAITING_VENDOR: "Awaiting vendor",
+    IN_UAT: "In UAT",
+    RESOLVED: "Resolved",
   };
   return map[s] || s;
 };

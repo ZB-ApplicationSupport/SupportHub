@@ -91,7 +91,7 @@ const LoginForm = () => {
 
     try {
       const res = await login({
-        email: formState.username,
+        username: formState.username,
         password: formState.password,
       });
 

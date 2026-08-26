@@ -4,13 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum CaseStatus {
-    OPEN,
-    PENDING,
-    ESCALATED,
-    CLOSED,
-    WAITING_FOR_VENDOR,
-    WAITING_FOR_BANK,
-    IN_PROGRESS;
+    IN_PROGRESS,
+    AWAITING_VENDOR,
+    IN_UAT,
+    RESOLVED;
 
     @JsonCreator
     public static CaseStatus fromString(String value) {
