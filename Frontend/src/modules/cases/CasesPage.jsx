@@ -1,162 +1,551 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import {
   Box,
   Button,
   Heading,
   SimpleGrid,
   Stack,
-  Text,
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
+
 import CasesTable from "../../components/tables/CasesTable";
 import CaseDetailsModal from "../../components/modals/CaseDetailsModal";
 import CreateCaseModal from "../../components/modals/CreateCaseModal";
 import EditCaseModal from "../../components/modals/EditCaseModal";
-import { getCases } from "../../API/cases.api";
-import { filterCases, sortCases } from "../../utils/caseUtils";
+
+import {
+  getCases,
+  getAssignees,
+} from "../../API/cases.api";
+
+import {
+  filterCases,
+  sortCases,
+} from "../../utils/caseUtils";
+
 import { exportCasesToExcel } from "../../utils/exportUtils";
-import { useSearchParams } from "react-router-dom";
 
 const CasesPage = () => {
   const toast = useToast();
+
   const viewModal = useDisclosure();
   const createModal = useDisclosure();
   const editModal = useDisclosure();
+
+  /*
+   * =========================================================
+   * DATA
+   * =========================================================
+   */
+
   const [cases, setCases] = useState([]);
   const [casesLoading, setCasesLoading] = useState(true);
-  const [selectedCase, setSelectedCase] = useState(null);
-  const [editCase, setEditCase] = useState(null);
-  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [assignees, setAssignees] = useState([]);
+  const [assigneesLoading, setAssigneesLoading] =
+      useState(false);
+
+  const [selectedCase, setSelectedCase] =
+      useState(null);
+
+  const [editCase, setEditCase] =
+      useState(null);
+
+  /*
+   * =========================================================
+   * FILTERS
+   * =========================================================
+   */
+
   const [query, setQuery] = useState("");
+
   const [status, setStatus] = useState("");
+
   const [priority, setPriority] = useState("");
+
   const [system, setSystem] = useState("");
-  const [sortKey, setSortKey] = useState("openedAt");
-  const [direction, setDirection] = useState("desc");
+
+  const [assignee, setAssignee] = useState("");
+
+  /*
+   * =========================================================
+   * SORTING
+   * =========================================================
+   */
+
+  const [sortKey, setSortKey] =
+      useState("openedAt");
+
+  const [direction, setDirection] =
+      useState("desc");
+
+  /*
+   * =========================================================
+   * PAGINATION
+   * =========================================================
+   */
+
+  const [currentPage, setCurrentPage] =
+      useState(1);
+
+  const [pageSize, setPageSize] =
+      useState(10);
+
+  /*
+   * =========================================================
+   * LOAD CASES
+   * =========================================================
+   */
 
   const loadCases = useCallback(async () => {
     setCasesLoading(true);
+
     try {
       const data = await getCases();
-      setCases(data || []);
+
+      setCases(
+          Array.isArray(data)
+              ? data
+              : []
+      );
     } catch (err) {
+      console.error(
+          "Failed to load cases:",
+          err
+      );
+
       toast({
         title: "Failed to load cases",
-        description: err.response?.data?.message || "Please try again.",
+        description:
+            err.response?.data?.message ||
+            "Please try again.",
         status: "error",
         duration: 4000,
         isClosable: true,
       });
+
       setCases([]);
     } finally {
       setCasesLoading(false);
     }
   }, [toast]);
 
+  /*
+   * =========================================================
+   * LOAD ASSIGNEES
+   * =========================================================
+   */
+
+  const loadAssignees = useCallback(async () => {
+    setAssigneesLoading(true);
+
+    try {
+      const users = await getAssignees();
+
+      setAssignees(
+          Array.isArray(users)
+              ? users
+              : []
+      );
+    } catch (err) {
+      console.error(
+          "Failed to load assignees:",
+          err
+      );
+
+      setAssignees([]);
+
+      toast({
+        title: "Failed to load assignees",
+        description:
+            err.response?.data?.message ||
+            "Unable to load the assignee list.",
+        status: "warning",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setAssigneesLoading(false);
+    }
+  }, [toast]);
+
+  /*
+   * =========================================================
+   * INITIAL LOAD
+   * =========================================================
+   */
+
   useEffect(() => {
     loadCases();
-  }, [loadCases]);
+    loadAssignees();
+  }, [
+    loadCases,
+    loadAssignees,
+  ]);
+
+  /*
+   * =========================================================
+   * FILTER THEN SORT
+   * =========================================================
+   */
 
   const filteredCases = useMemo(() => {
-    const filtered = filterCases(cases, query, status, priority, system);
-    return sortCases(filtered, sortKey, direction);
-  }, [cases, query, status, priority, system, sortKey, direction]);
+    const filtered = filterCases(
+        cases,
+        query,
+        status,
+        priority,
+        system,
+        assignee
+    );
+
+    return sortCases(
+        filtered,
+        sortKey,
+        direction
+    );
+  }, [
+    cases,
+    query,
+    status,
+    priority,
+    system,
+    assignee,
+    sortKey,
+    direction,
+  ]);
+
+  /*
+   * =========================================================
+   * TOTAL FILTERED RECORDS
+   * =========================================================
+   */
+
+  const totalItems =
+      filteredCases.length;
+
+  /*
+   * =========================================================
+   * PAGINATION
+   * =========================================================
+   */
+
+  const paginatedCases = useMemo(() => {
+    const startIndex =
+        (currentPage - 1) * pageSize;
+
+    const endIndex =
+        startIndex + pageSize;
+
+    return filteredCases.slice(
+        startIndex,
+        endIndex
+    );
+  }, [
+    filteredCases,
+    currentPage,
+    pageSize,
+  ]);
+
+  /*
+   * =========================================================
+   * FILTER HANDLERS
+   * =========================================================
+   */
+
+  const handleQueryChange = (value) => {
+    setQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (value) => {
+    setStatus(value);
+    setCurrentPage(1);
+  };
+
+  const handlePriorityChange = (value) => {
+    setPriority(value);
+    setCurrentPage(1);
+  };
+
+  const handleSystemChange = (value) => {
+    setSystem(value);
+    setCurrentPage(1);
+  };
+
+  const handleAssigneeChange = (value) => {
+    setAssignee(value);
+    setCurrentPage(1);
+  };
+
+  /*
+   * =========================================================
+   * PAGE SIZE
+   * =========================================================
+   */
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  /*
+   * =========================================================
+   * KEEP CURRENT PAGE VALID
+   * =========================================================
+   */
+
+  useEffect(() => {
+    const totalPages = Math.max(
+        1,
+        Math.ceil(
+            totalItems / pageSize
+        )
+    );
+
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [
+    totalItems,
+    pageSize,
+    currentPage,
+  ]);
+
+  /*
+   * =========================================================
+   * EXPORT
+   * =========================================================
+   */
 
   const handleExport = () => {
-    exportCasesToExcel(filteredCases);
+    exportCasesToExcel(
+        filteredCases
+    );
   };
+
+  /*
+   * =========================================================
+   * OPEN CASE DETAILS
+   * =========================================================
+   */
 
   const openCase = (item) => {
     setSelectedCase(item);
     viewModal.onOpen();
   };
 
+  /*
+   * =========================================================
+   * OPEN LEGACY EDIT
+   * =========================================================
+   */
+
   const openEdit = (item) => {
     setEditCase(item);
     editModal.onOpen();
   };
 
+  /*
+   * =========================================================
+   * CLOSE CASE DETAILS
+   * =========================================================
+   */
+
   const closeView = () => {
-    const nextParams = new URLSearchParams(searchParams);
-    if (nextParams.has("caseId")) {
-      nextParams.delete("caseId");
-      setSearchParams(nextParams);
-    }
     setSelectedCase(null);
     viewModal.onClose();
   };
+
+  /*
+   * =========================================================
+   * CLOSE LEGACY EDIT
+   * =========================================================
+   */
 
   const closeEdit = () => {
     setEditCase(null);
     editModal.onClose();
   };
 
-  useEffect(() => {
-    const caseId = searchParams.get("caseId");
-    if (!caseId) return;
-    const match = cases.find((item) => item.id === caseId);
-    if (!match) return;
-    if (!selectedCase || selectedCase.id !== match.id) {
-      setSelectedCase(match);
-    }
-    if (!viewModal.isOpen) {
-      viewModal.onOpen();
-    }
-  }, [searchParams, selectedCase, viewModal]);
+  /*
+   * =========================================================
+   * CASE UPDATED
+   * =========================================================
+   */
+
+  const handleCaseUpdated = async () => {
+    await loadCases();
+    await loadAssignees();
+
+    setSelectedCase(null);
+  };
+
+  /*
+   * =========================================================
+   * RENDER
+   * =========================================================
+   */
 
   return (
-    <Stack spacing={6}>
-      <SimpleGrid columns={{ base: 1, md: 2 }} alignItems="center" spacing={4}>
-        <Box>
-          <Heading size="lg">Cases</Heading>
-        </Box>
-        <Stack direction={{ base: "column", md: "row" }} justify="flex-end">
-          <Button onClick={createModal.onOpen}>
-            Create Case
-          </Button>
-          <Button variant="outline" onClick={handleExport}>
-            Export List
-          </Button>
-        </Stack>
-      </SimpleGrid>
+      <Stack spacing={6}>
 
-      <CasesTable
-        items={filteredCases}
-        isLoading={casesLoading}
-        onOpenCase={openCase}
-        onEditCase={openEdit}
-        query={query}
-        status={status}
-        priority={priority}
-        system={system}
-        onQueryChange={setQuery}
-        onStatusChange={setStatus}
-        onPriorityChange={setPriority}
-        onSystemChange={setSystem}
-        sortKey={sortKey}
-        direction={direction}
-        onSortChange={setSortKey}
-        onDirectionChange={setDirection}
-      />
+        {/* =====================================================
+          PAGE HEADER
+      ====================================================== */}
 
-      <CaseDetailsModal
-        isOpen={viewModal.isOpen}
-        onClose={closeView}
-        item={selectedCase}
-      />
-      <CreateCaseModal
-        isOpen={createModal.isOpen}
-        onClose={createModal.onClose}
-        onSuccess={loadCases}
-      />
-      <EditCaseModal
-        isOpen={editModal.isOpen}
-        onClose={closeEdit}
-        item={editCase}
-        onSuccess={loadCases}
-      />
-    </Stack>
+        <SimpleGrid
+            columns={{
+              base: 1,
+              md: 2,
+            }}
+            alignItems="center"
+            spacing={4}
+        >
+
+          <Box>
+            <Heading size="lg">
+              Cases
+            </Heading>
+          </Box>
+
+          <Stack
+              direction={{
+                base: "column",
+                md: "row",
+              }}
+              justify="flex-end"
+          >
+
+            {/* Create */}
+
+            <Button
+                onClick={createModal.onOpen}
+            >
+              Create Case
+            </Button>
+
+            {/* Export */}
+
+            <Button
+                variant="outline"
+                onClick={handleExport}
+            >
+              Export List
+            </Button>
+
+          </Stack>
+
+        </SimpleGrid>
+
+
+        {/* =====================================================
+          CASES TABLE
+      ====================================================== */}
+
+        <CasesTable
+            items={paginatedCases}
+            isLoading={casesLoading}
+
+            onOpenCase={openCase}
+            onRefresh={loadCases}
+
+            query={query}
+            status={status}
+            priority={priority}
+            system={system}
+            assignee={assignee}
+
+            assignees={assignees}
+            isLoadingAssignees={
+              assigneesLoading
+            }
+
+            onQueryChange={
+              handleQueryChange
+            }
+
+            onStatusChange={
+              handleStatusChange
+            }
+
+            onPriorityChange={
+              handlePriorityChange
+            }
+
+            onSystemChange={
+              handleSystemChange
+            }
+
+            onAssigneeChange={
+              handleAssigneeChange
+            }
+
+            sortKey={sortKey}
+            direction={direction}
+
+            onSortChange={setSortKey}
+
+            onDirectionChange={
+              setDirection
+            }
+
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={totalItems}
+
+            onPageChange={
+              setCurrentPage
+            }
+
+            onPageSizeChange={
+              handlePageSizeChange
+            }
+        />
+
+
+        {/* =====================================================
+          CASE DETAILS / UPDATE
+      ====================================================== */}
+
+        <CaseDetailsModal
+            isOpen={viewModal.isOpen}
+            onClose={closeView}
+            item={selectedCase}
+            onSuccess={handleCaseUpdated}
+        />
+
+
+        {/* =====================================================
+          CREATE CASE
+      ====================================================== */}
+
+        <CreateCaseModal
+            isOpen={createModal.isOpen}
+            onClose={createModal.onClose}
+            onSuccess={loadCases}
+        />
+
+
+        {/* =====================================================
+          LEGACY EDIT CASE
+      ====================================================== */}
+
+        <EditCaseModal
+            isOpen={editModal.isOpen}
+            onClose={closeEdit}
+            item={editCase}
+            onSuccess={loadCases}
+        />
+
+      </Stack>
   );
 };
 

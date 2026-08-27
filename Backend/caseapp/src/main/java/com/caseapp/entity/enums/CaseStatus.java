@@ -11,11 +11,18 @@ public enum CaseStatus {
 
     @JsonCreator
     public static CaseStatus fromString(String value) {
-        if (value == null || value.isBlank()) return null;
-        String upper = value.toUpperCase().replace(" ", "_");
-        for (CaseStatus s : values()) {
-            if (s.name().equals(upper)) return s;
+        if (value == null || value.isBlank()) {
+            return null;
         }
+
+        String upper = value.toUpperCase().replace(" ", "_");
+
+        for (CaseStatus status : values()) {
+            if (status.name().equals(upper)) {
+                return status;
+            }
+        }
+
         return null;
     }
 
@@ -24,4 +31,3 @@ public enum CaseStatus {
         return name();
     }
 }
-

@@ -23,10 +23,10 @@ export const NAV_ITEMS = [
 ];
 
 export const STATUS_COLORS = {
-  Open: "orange",
-  Closed: "green",
-  Escalated: "red",
-  Pending: "yellow",
+  "In progress": "blue",
+  "In UAT": "purple",
+  "Resolved": "green",
+  "Awaiting vendor": "orange",
 };
 
 export const PRIORITY_COLORS = {

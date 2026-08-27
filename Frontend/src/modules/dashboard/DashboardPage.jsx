@@ -25,15 +25,6 @@ const DashboardPage = () => {
       .catch(() => setCases([]));
   }, []);
 
-  const stats = {
-    total: cases.length,
-    assigned: cases.filter((item) => item.assignedTo !== "Unassigned").length,
-    unassigned: cases.filter((item) => item.assignedTo === "Unassigned").length,
-    open: cases.filter((item) => item.status === "Open").length,
-    closed: cases.filter((item) => item.status === "Closed").length,
-    escalated: cases.filter((item) => item.status === "Escalated").length,
-  };
-
   const systemData = buildCasesBySystem(cases);
 
 
@@ -68,7 +59,7 @@ const DashboardPage = () => {
         </Heading>
       </Box>
 
-      <DashboardOverview stats={stats} />
+        <DashboardOverview cases={cases} />
 
       <SimpleGrid
         gridTemplateColumns="3fr 1fr"

@@ -1,5 +1,6 @@
 package com.caseapp.service;
 
+import com.caseapp.dto.AssigneeDTO;
 import com.caseapp.entity.User;
 import com.caseapp.entity.enums.Role;
 import com.caseapp.repository.UserRepository;
@@ -37,7 +38,7 @@ public class UserService {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(tempPassword));
         user.setRole(role);
-        user.setEnabled(false); // user must enable after password reset
+        user.setEnabled(false);
 
         return userRepository.save(user);
     }
@@ -62,6 +63,44 @@ public class UserService {
 
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    /*
+     * =========================================================
+     * ENABLED USERS
+     * =========================================================
+     *
+     * Used by the assignee dropdown.
+     *
+     * Only enabled users should be available for case assignment.
+     */
+    public List<User> getEnabledUsers() {
+        return userRepository.findByEnabledTrue();
+    }
+
+    /*
+     * =========================================================
+     * ASSIGNEES
+     * =========================================================
+     *
+     * Return only the information the frontend needs.
+     *
+     * We deliberately do NOT expose:
+     * - password
+     * - temporaryPassword
+     * - enabled
+     * - role
+     */
+    public List<AssigneeDTO> getAssignees() {
+
+        return getEnabledUsers()
+                .stream()
+                .map(user -> new AssigneeDTO(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail()
+                ))
+                .toList();
     }
 
     public List<User> getAllUsers() {

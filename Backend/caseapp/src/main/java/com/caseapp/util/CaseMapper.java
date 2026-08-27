@@ -31,15 +31,45 @@ public final class CaseMapper {
     }
 
     public static void updateEntityFromDto(Case entity, CaseDTO dto) {
-        if (dto.getTitle() != null) entity.setTitle(dto.getTitle());
-        if (dto.getSummary() != null) entity.setSummary(dto.getSummary());
-        if (dto.getDescription() != null) entity.setDescription(dto.getDescription());
-        if (dto.getSystemName() != null) entity.setSystemName(dto.getSystemName());
-        if (dto.getPriority() != null) entity.setPriority(dto.getPriority());
-        if (dto.getAssignedTo() != null) entity.setAssignedTo(dto.getAssignedTo());
-        if (dto.getStatus() != null) entity.setStatus(dto.getStatus());
-        if (dto.getJiraRefs() != null) entity.setJiraRefs(listToRefString(dto.getJiraRefs()));
-        if (dto.getVendorRefs() != null) entity.setVendorRefs(listToRefString(dto.getVendorRefs()));
+
+        if (dto.getTitle() != null) {
+            entity.setTitle(dto.getTitle());
+        }
+
+        if (dto.getSummary() != null) {
+            entity.setSummary(dto.getSummary());
+        }
+
+        if (dto.getDescription() != null) {
+            entity.setDescription(dto.getDescription());
+        }
+
+        if (dto.getSystemName() != null) {
+            entity.setSystemName(dto.getSystemName());
+        }
+
+        if (dto.getPriority() != null) {
+            entity.setPriority(dto.getPriority());
+        }
+
+        // Allow null so "Unassigned" can clear the assignee
+        entity.setAssignedTo(dto.getAssignedTo());
+
+        if (dto.getStatus() != null) {
+            entity.setStatus(dto.getStatus());
+        }
+
+        if (dto.getJiraRefs() != null) {
+            entity.setJiraRefs(
+                    listToRefString(dto.getJiraRefs())
+            );
+        }
+
+        if (dto.getVendorRefs() != null) {
+            entity.setVendorRefs(
+                    listToRefString(dto.getVendorRefs())
+            );
+        }
     }
 
     public static CaseDTO toDTO(Case entity) {

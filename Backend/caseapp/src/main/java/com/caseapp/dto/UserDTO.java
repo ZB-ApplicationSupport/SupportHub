@@ -9,9 +9,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDTO {
+
     private Long id;
+
+    private String username;
+
     private String email;
-    private String temporaryPassword; // can be left blank when sending data to frontend
+
+    private String temporaryPassword;
+
     private Role role;
+
     private boolean enabled;
 }

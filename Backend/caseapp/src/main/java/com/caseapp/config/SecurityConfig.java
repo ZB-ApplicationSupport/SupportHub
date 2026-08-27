@@ -29,30 +29,103 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
 
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http
+    ) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/signup-request/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-                        .anyRequest().authenticated())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // =====================================================
+                // CSRF
+                // =====================================================
+
+                .csrf(csrf -> csrf.disable())
+
+
+                // =====================================================
+                // AUTHORIZATION
+                // =====================================================
+
+                .authorizeHttpRequests(auth -> auth
+
+                        // Public authentication endpoints
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api/signup-request/**"
+                        ).permitAll()
+
+
+                        // Admin-only endpoints
+                        .requestMatchers(
+                                "/api/admin/**"
+                        ).hasAuthority("ADMIN")
+
+
+                        // =================================================
+                        // ENABLED USERS / ASSIGNEES
+                        // =================================================
+                        //
+                        // Authenticated users can retrieve the list of
+                        // enabled users. This is used by the Cases page
+                        // for the "Assigned To" filter.
+                        //
+
+                        .requestMatchers(
+                                "/api/users/enabled"
+                        ).authenticated()
+
+
+                        // Everything else requires authentication
+                        .anyRequest().authenticated()
+                )
+
+
+                // =====================================================
+                // SESSION MANAGEMENT
+                // =====================================================
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
+                );
+
+
+        // =============================================================
+        // JWT FILTER
+        // =============================================================
+
+        http.addFilterBefore(
+                jwtAuthenticationFilter,
+                UsernamePasswordAuthenticationFilter.class
+        );
+
 
         return http.build();
     }
+
+
+    // =============================================================
+    // PASSWORD ENCODER
+    // =============================================================
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Spring Boot 3 requires AuthenticationManager bean explicitly
+
+    // =============================================================
+    // AUTHENTICATION MANAGER
+    // =============================================================
+
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration authConfig
+    ) throws Exception {
+
         return authConfig.getAuthenticationManager();
     }
 }

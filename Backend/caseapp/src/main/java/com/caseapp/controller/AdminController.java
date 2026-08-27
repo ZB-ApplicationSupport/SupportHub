@@ -12,9 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -28,67 +28,109 @@ public class AdminController {
 
     @PostMapping("add/users")
     public ResponseEntity<?> addUser(@Valid @RequestBody UserDTO userDTO) {
-        Role role = userDTO.getRole() != null ? userDTO.getRole() : Role.USER;
-        User newUser = userService.addUser(userDTO.getEmail(), userDTO.getTemporaryPassword(), role);
 
-        //Send email with account confirmation and login link
+        Role role = userDTO.getRole() != null
+                ? userDTO.getRole()
+                : Role.USER;
+
+        User newUser = userService.addUser(
+                userDTO.getEmail(),
+                userDTO.getTemporaryPassword(),
+                role
+        );
+
         String loginLink = "http://frontend-url/login";
-        String message = "Your account was successfully created. Use this link to login: " + loginLink;
-        emailService.sendEmail(newUser.getEmail(), "Account Created", message);
 
-        //Send invitation email with reset password link (generate token etc.)
-        //String resetLink = "http://frontend-url/reset-password?email=" + newUser.getEmail();
-        //String message = "You have been added. Please reset your password here: " + resetLink;
-        // emailService.sendEmail(newUser.getEmail(), "Account Created", message);
+        String message =
+                "Your account was successfully created. " +
+                        "Use this link to login: " +
+                        loginLink;
 
-        return ResponseEntity.ok("User created and email sent");
+        emailService.sendEmail(
+                newUser.getEmail(),
+                "Account Created",
+                message
+        );
+
+        return ResponseEntity.ok(
+                "User created and email sent"
+        );
     }
 
     @GetMapping("get/users")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
 
-        // Convert User to UserDTO
-        List<UserDTO> userDTOs = users.stream()
-                .map(user -> new UserDTO(
-                        user.getId(),
-                        user.getEmail(),
-                        "", // password not exposed
-                        user.getRole(),
-                        user.isEnabled()
-                ))
-                .toList();
+        List<User> users =
+                userService.getAllUsers();
+
+        List<UserDTO> userDTOs =
+                users.stream()
+                        .map(user -> new UserDTO(
+                                user.getId(),
+                                user.getUsername(),
+                                user.getEmail(),
+                                "",
+                                user.getRole(),
+                                user.isEnabled()
+                        ))
+                        .toList();
 
         return ResponseEntity.ok(userDTOs);
     }
 
-
     @GetMapping("/signup-requests")
-    public ResponseEntity<List<SignupRequestResponseDTO>> getSignupRequests() {
-        return ResponseEntity.ok(signupRequestService.getPendingRequests());
+    public ResponseEntity<List<SignupRequestResponseDTO>>
+    getSignupRequests() {
+
+        return ResponseEntity.ok(
+                signupRequestService.getPendingRequests()
+        );
     }
 
     @PutMapping("/signup-requests/{id}/approve")
-    public ResponseEntity<SignupRequestResponseDTO> approveSignupRequest(@PathVariable Long id) {
-        return ResponseEntity.ok(signupRequestService.approveRequest(id));
+    public ResponseEntity<SignupRequestResponseDTO>
+    approveSignupRequest(
+            @PathVariable Long id
+    ) {
+
+        return ResponseEntity.ok(
+                signupRequestService.approveRequest(id)
+        );
     }
 
     @PutMapping("/signup-requests/{id}/reject")
-    public ResponseEntity<SignupRequestResponseDTO> rejectSignupRequest(@PathVariable Long id) {
-        return ResponseEntity.ok(signupRequestService.rejectRequest(id));
+    public ResponseEntity<SignupRequestResponseDTO>
+    rejectSignupRequest(
+            @PathVariable Long id
+    ) {
+
+        return ResponseEntity.ok(
+                signupRequestService.rejectRequest(id)
+        );
     }
 
     @PutMapping("/users/{id}/status")
-    public ResponseEntity<UserDTO> toggleUserStatus(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
-        User user = userService.getUserById(id);
-        user.setEnabled(body.get("enabled")); // toggle status
-        User updated = userService.save(user);
+    public ResponseEntity<UserDTO>
+    toggleUserStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, Boolean> body
+    ) {
 
-        // return full DTO for frontend
+        User user =
+                userService.getUserById(id);
+
+        user.setEnabled(
+                body.get("enabled")
+        );
+
+        User updated =
+                userService.save(user);
+
         UserDTO dto = new UserDTO(
                 user.getId(),
+                updated.getUsername(),
                 updated.getEmail(),
-                null,               // temporaryPassword is never sent to frontend
+                null,
                 updated.getRole(),
                 updated.isEnabled()
         );
@@ -96,5 +138,22 @@ public class AdminController {
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping("/get/assignees")
+    public ResponseEntity<List<UserDTO>> getAssignees() {
 
+        List<User> users = userService.getEnabledUsers();
+
+        List<UserDTO> userDTOs = users.stream()
+                .map(user -> new UserDTO(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        null,
+                        user.getRole(),
+                        user.isEnabled()
+                ))
+                .toList();
+
+        return ResponseEntity.ok(userDTOs);
+    }
 }

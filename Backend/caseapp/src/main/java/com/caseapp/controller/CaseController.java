@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import com.caseapp.dto.UserDTO;
 
 @RestController
 @RequestMapping("/api/cases")
@@ -35,6 +36,25 @@ public class CaseController {
         }
         Case created = caseService.createCase(entity);
         return ResponseEntity.ok(CaseMapper.toDTO(created));
+    }
+
+    @GetMapping("/assignees")
+    public ResponseEntity<List<UserDTO>> getAssignees() {
+
+        List<UserDTO> users =
+                userService.getEnabledUsers()
+                        .stream()
+                        .map(user -> new UserDTO(
+                                user.getId(),
+                                user.getUsername(),
+                                user.getEmail(),
+                                "",
+                                user.getRole(),
+                                user.isEnabled()
+                        ))
+                        .toList();
+
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/get")
@@ -104,11 +124,39 @@ public class CaseController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<CaseDTO> updateCase(@PathVariable Long id, @Valid @RequestBody CaseDTO dto) {
+    public ResponseEntity<CaseDTO> updateCase(
+            @PathVariable Long id,
+            @Valid @RequestBody CaseDTO dto) {
+
+        System.out.println("=== UPDATE CASE ===");
+        System.out.println("ID: " + id);
+        System.out.println("Status: " + dto.getStatus());
+        System.out.println("Priority: " + dto.getPriority());
+        System.out.println("Assigned To: " + dto.getAssignedTo());
+
         Case existing = caseService.getCaseById(id);
+
+        System.out.println("BEFORE UPDATE:");
+        System.out.println("Status: " + existing.getStatus());
+        System.out.println("Priority: " + existing.getPriority());
+        System.out.println("Assigned To: " + existing.getAssignedTo());
+
         CaseMapper.updateEntityFromDto(existing, dto);
+
+        System.out.println("AFTER MAPPER:");
+        System.out.println("Status: " + existing.getStatus());
+        System.out.println("Priority: " + existing.getPriority());
+        System.out.println("Assigned To: " + existing.getAssignedTo());
+
         existing.setLastUpdatedAt(java.time.LocalDateTime.now());
+
         Case saved = caseService.updateCase(existing);
+
+        System.out.println("AFTER SAVE:");
+        System.out.println("Status: " + saved.getStatus());
+        System.out.println("Priority: " + saved.getPriority());
+        System.out.println("Assigned To: " + saved.getAssignedTo());
+
         return ResponseEntity.ok(CaseMapper.toDTO(saved));
     }
 }

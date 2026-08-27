@@ -1,43 +1,84 @@
 import React from "react";
 import { SimpleGrid, Box } from "@chakra-ui/react";
 import StatsCard from "./StatsCard";
-import { cases } from "../../data/cases";
 import CaseStatusChart from "../../components/charts/CaseStatusChart";
 
-const DashboardOverview = ({ stats }) => {
+const DashboardOverview = ({ cases = [] }) => {
 
   const buildStatusDistribution = (items) => {
     const map = items.reduce((acc, item) => {
-      acc[item.status] = (acc[item.status] || 0) + 1;
+      const status = item.status || "Unknown";
+      acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {});
-    return Object.keys(map).map((key) => ({ status: key, value: map[key] }));
+
+    return Object.keys(map).map((key) => ({
+      status: key,
+      value: map[key],
+    }));
   };
+
+  // Total number of cases
+  const totalCases = cases.length;
+
+  // Open = In progress + In UAT
+  const openCases = cases.filter(
+      (item) =>
+          item.status === "In progress" ||
+          item.status === "In UAT"
+  ).length;
+
+  // Resolved cases
+  const resolvedCases = cases.filter(
+      (item) => item.status === "Resolved"
+  ).length;
+
+  // Awaiting vendor cases
+  const awaitingVendorCases = cases.filter(
+      (item) => item.status === "Awaiting vendor"
+  ).length;
 
   const statusData = buildStatusDistribution(cases);
 
   return (
-    <Box mb={6}>
-      <SimpleGrid columns={2} spacing={4}>
-        <Box h="220px">
-          <SimpleGrid columns={{ base: 2, md: 2, xl: 2 }} spacing={4} >
-            <StatsCard label="Total Cases" value={stats.total} helper="All systems" />
-            <StatsCard label="Open Cases" value={stats.open} helper="Active workload" />
-            <StatsCard label="Closed Cases" value={stats.closed} helper="Resolved" />
-            <StatsCard
-              label="Escalated"
-              value={stats.escalated}
-              helper="High attention"
-            />
-          </SimpleGrid>
-        </Box>
-        <Box>
-          <CaseStatusChart data={statusData} />
-        </Box>
-        
-      </SimpleGrid>
-    </Box>
-    
+      <Box mb={6}>
+        <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4}>
+
+          {/* Statistics */}
+          <Box>
+            <SimpleGrid
+                columns={{ base: 1, md: 2 }}
+                spacing={4}
+            >
+              <StatsCard
+                  label="Total Cases"
+                  value={totalCases}
+              />
+
+              <StatsCard
+                  label="Open Cases"
+                  value={openCases}
+              />
+
+              <StatsCard
+                  label="Resolved Cases"
+                  value={resolvedCases}
+              />
+
+              <StatsCard
+                  label="Awaiting Vendor"
+                  value={awaitingVendorCases}
+              />
+            </SimpleGrid>
+          </Box>
+
+          {/* Status Chart */}
+          <Box h="300px" minW={0}>
+            <CaseStatusChart data={statusData} />
+          </Box>
+
+        </SimpleGrid>
+      </Box>
   );
 };
 
