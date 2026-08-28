@@ -1145,20 +1145,32 @@ const CasesTable = ({
 
                                         {/* CASE SUMMARY */}
 
+                                        {/*<Td*/}
+                                        {/*    py={3}*/}
+                                        {/*    px={3}*/}
+                                        {/*>*/}
+
+                                        {/*    <Text*/}
+                                        {/*        fontSize="sm"*/}
+                                        {/*        color="gray.700"*/}
+                                        {/*        noOfLines={2}*/}
+                                        {/*        lineHeight="1.4"*/}
+                                        {/*        overflowWrap="anywhere"*/}
+                                        {/*        maxW="400px"*/}
+                                        {/*    >*/}
+                                        {/*        {summary}*/}
+                                        {/*    </Text>*/}
+
+                                        {/*</Td>*/}
                                         <Td
-                                            py={3}
-                                            px={3}
+                                            whiteSpace="normal"
+                                            wordBreak="break-word"
+                                            maxW="350px"
+                                            verticalAlign="top"
                                         >
-
-                                            <Text
-                                                fontSize="sm"
-                                                color="gray.700"
-                                                noOfLines={2}
-                                                lineHeight="1.4"
-                                            >
-                                                {summary}
+                                            <Text noOfLines={3}>
+                                                {item.summary}
                                             </Text>
-
                                         </Td>
 
 

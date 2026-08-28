@@ -131,6 +131,8 @@ export const filterCases = (
 };
 
 
+
+
 /*
  * ===========================================================
  * SORT CASES
@@ -259,6 +261,32 @@ export const sortCases = (
         break;
     }
 
+/*
+ * =======================================================
+ * CASE ID NUMERIC SORTING
+ * =======================================================
+ */
+
+if (sortKey === "id") {
+
+  const numberA = parseInt(
+      String(valueA).replace(/\D/g, ""),
+      10
+  );
+
+  const numberB = parseInt(
+      String(valueB).replace(/\D/g, ""),
+      10
+  );
+
+  if (Number.isNaN(numberA)) return 1;
+
+  if (Number.isNaN(numberB)) return -1;
+
+  return direction === "asc"
+      ? numberA - numberB
+      : numberB - numberA;
+}
 
     /*
      * =======================================================
