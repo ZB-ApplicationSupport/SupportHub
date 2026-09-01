@@ -18,7 +18,6 @@ import {
 import CasesTable from "../../components/tables/CasesTable";
 import CaseDetailsModal from "../../components/modals/CaseDetailsModal";
 import CreateCaseModal from "../../components/modals/CreateCaseModal";
-import EditCaseModal from "../../components/modals/EditCaseModal";
 
 import {
   getCases,
@@ -37,7 +36,6 @@ const CasesPage = () => {
 
   const viewModal = useDisclosure();
   const createModal = useDisclosure();
-  const editModal = useDisclosure();
 
   /*
    * =========================================================
@@ -49,14 +47,9 @@ const CasesPage = () => {
   const [casesLoading, setCasesLoading] = useState(true);
 
   const [assignees, setAssignees] = useState([]);
-  const [assigneesLoading, setAssigneesLoading] =
-      useState(false);
+  const [assigneesLoading, setAssigneesLoading] = useState(false);
 
-  const [selectedCase, setSelectedCase] =
-      useState(null);
-
-  const [editCase, setEditCase] =
-      useState(null);
+  const [selectedCase, setSelectedCase] = useState(null);
 
   /*
    * =========================================================
@@ -65,13 +58,9 @@ const CasesPage = () => {
    */
 
   const [query, setQuery] = useState("");
-
   const [status, setStatus] = useState("");
-
   const [priority, setPriority] = useState("");
-
   const [system, setSystem] = useState("");
-
   const [assignee, setAssignee] = useState("");
 
   /*
@@ -80,11 +69,8 @@ const CasesPage = () => {
    * =========================================================
    */
 
-  const [sortKey, setSortKey] =
-      useState("openedAt");
-
-  const [direction, setDirection] =
-      useState("desc");
+  const [sortKey, setSortKey] = useState("openedAt");
+  const [direction, setDirection] = useState("desc");
 
   /*
    * =========================================================
@@ -92,11 +78,8 @@ const CasesPage = () => {
    * =========================================================
    */
 
-  const [currentPage, setCurrentPage] =
-      useState(1);
-
-  const [pageSize, setPageSize] =
-      useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   /*
    * =========================================================
@@ -116,10 +99,7 @@ const CasesPage = () => {
               : []
       );
     } catch (err) {
-      console.error(
-          "Failed to load cases:",
-          err
-      );
+      console.error("Failed to load cases:", err);
 
       toast({
         title: "Failed to load cases",
@@ -228,8 +208,7 @@ const CasesPage = () => {
    * =========================================================
    */
 
-  const totalItems =
-      filteredCases.length;
+  const totalItems = filteredCases.length;
 
   /*
    * =========================================================
@@ -326,53 +305,32 @@ const CasesPage = () => {
    */
 
   const handleExport = () => {
-    exportCasesToExcel(
-        filteredCases
-    );
+    exportCasesToExcel(filteredCases);
   };
 
   /*
    * =========================================================
-   * OPEN CASE DETAILS
+   * OPEN CASE
    * =========================================================
    */
 
   const openCase = (item) => {
+    console.log("=== OPEN CASE ===");
+    console.log(item);
+
     setSelectedCase(item);
     viewModal.onOpen();
   };
 
   /*
    * =========================================================
-   * OPEN LEGACY EDIT
-   * =========================================================
-   */
-
-  const openEdit = (item) => {
-    setEditCase(item);
-    editModal.onOpen();
-  };
-
-  /*
-   * =========================================================
-   * CLOSE CASE DETAILS
+   * CLOSE CASE
    * =========================================================
    */
 
   const closeView = () => {
     setSelectedCase(null);
     viewModal.onClose();
-  };
-
-  /*
-   * =========================================================
-   * CLOSE LEGACY EDIT
-   * =========================================================
-   */
-
-  const closeEdit = () => {
-    setEditCase(null);
-    editModal.onClose();
   };
 
   /*
@@ -397,10 +355,6 @@ const CasesPage = () => {
   return (
       <Stack spacing={6}>
 
-        {/* =====================================================
-          PAGE HEADER
-      ====================================================== */}
-
         <SimpleGrid
             columns={{
               base: 1,
@@ -424,15 +378,11 @@ const CasesPage = () => {
               justify="flex-end"
           >
 
-            {/* Create */}
-
             <Button
                 onClick={createModal.onOpen}
             >
               Create Case
             </Button>
-
-            {/* Export */}
 
             <Button
                 variant="outline"
@@ -444,11 +394,6 @@ const CasesPage = () => {
           </Stack>
 
         </SimpleGrid>
-
-
-        {/* =====================================================
-          CASES TABLE
-      ====================================================== */}
 
         <CasesTable
             items={paginatedCases}
@@ -464,84 +409,41 @@ const CasesPage = () => {
             assignee={assignee}
 
             assignees={assignees}
-            isLoadingAssignees={
-              assigneesLoading
-            }
+            isLoadingAssignees={assigneesLoading}
 
-            onQueryChange={
-              handleQueryChange
-            }
-
-            onStatusChange={
-              handleStatusChange
-            }
-
-            onPriorityChange={
-              handlePriorityChange
-            }
-
-            onSystemChange={
-              handleSystemChange
-            }
-
-            onAssigneeChange={
-              handleAssigneeChange
-            }
+            onQueryChange={handleQueryChange}
+            onStatusChange={handleStatusChange}
+            onPriorityChange={handlePriorityChange}
+            onSystemChange={handleSystemChange}
+            onAssigneeChange={handleAssigneeChange}
 
             sortKey={sortKey}
             direction={direction}
 
             onSortChange={setSortKey}
-
-            onDirectionChange={
-              setDirection
-            }
+            onDirectionChange={setDirection}
 
             currentPage={currentPage}
             pageSize={pageSize}
             totalItems={totalItems}
 
-            onPageChange={
-              setCurrentPage
-            }
-
-            onPageSizeChange={
-              handlePageSizeChange
-            }
+            onPageChange={setCurrentPage}
+            onPageSizeChange={handlePageSizeChange}
         />
-
-
-        {/* =====================================================
-          CASE DETAILS / UPDATE
-      ====================================================== */}
 
         <CaseDetailsModal
             isOpen={viewModal.isOpen}
             onClose={closeView}
             item={selectedCase}
+            assignees={assignees}
+            isLoadingAssignees={assigneesLoading}
+            onRefreshAssignees={loadAssignees}
             onSuccess={handleCaseUpdated}
         />
-
-
-        {/* =====================================================
-          CREATE CASE
-      ====================================================== */}
 
         <CreateCaseModal
             isOpen={createModal.isOpen}
             onClose={createModal.onClose}
-            onSuccess={loadCases}
-        />
-
-
-        {/* =====================================================
-          LEGACY EDIT CASE
-      ====================================================== */}
-
-        <EditCaseModal
-            isOpen={editModal.isOpen}
-            onClose={closeEdit}
-            item={editCase}
             onSuccess={loadCases}
         />
 

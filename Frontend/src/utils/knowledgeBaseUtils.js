@@ -9,10 +9,7 @@ export const filterArticles = (items, query, system, category, tag) => {
         String(word).toLowerCase().includes(query.toLowerCase())
       );
     const matchesSystem = !system || item.system === system;
-    const matchesCategory = !category || item.category === category;
-    const tags = item.tags || [];
-    const matchesTag = !tag || tags.includes(tag);
-    return matchesQuery && matchesSystem && matchesCategory && matchesTag;
+    return matchesQuery && matchesSystem;
   });
 };
 

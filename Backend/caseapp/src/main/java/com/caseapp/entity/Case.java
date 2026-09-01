@@ -19,32 +19,29 @@ public class Case {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
+    @Column(nullable = false)
+    private String summary;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    private String summary;
-
-    private String systemName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "support_system_id")
+    private SupportSystem supportSystem;
 
     private String priority;
 
-    private String assignedTo;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_to_user_id")
+    private User assignedTo;
 
-    @Column(columnDefinition = "TEXT")
-    private String jiraRefs; // JSON array as string
-
-    @Column(columnDefinition = "TEXT")
-    private String vendorRefs; // JSON array as string
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id", nullable = false)
     private User createdBy;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private CaseStatus status;
-
-    private LocalDateTime openedAt;
 
     private LocalDateTime createdAt;
 

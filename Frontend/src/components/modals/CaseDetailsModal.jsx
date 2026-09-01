@@ -1,4 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
+
 import {
   Badge,
   Box,
@@ -24,12 +28,13 @@ import {
 } from "@chakra-ui/react";
 
 import {
-  PRIORITY_COLORS,
   STATUS_COLORS,
 } from "../../utils/constants";
 
-import { updateCase } from "../../API/cases.api";
-import { getAssignees } from "../../API/users.api";
+import {
+  updateCase,
+} from "../../API/cases.api";
+
 const STATUS_OPTIONS = [
   "In progress",
   "In UAT",
@@ -48,6 +53,9 @@ const CaseDetailsModal = ({
                             isOpen,
                             onClose,
                             item,
+                            assignees = [],
+                            isLoadingAssignees = false,
+                            onRefreshAssignees,
                             onSuccess,
                           }) => {
   const toast = useToast();
@@ -60,24 +68,15 @@ const CaseDetailsModal = ({
 
   const [status, setStatus] = useState("");
   const [priority, setPriority] = useState("");
-  const [assignedTo, setAssignedTo] =
-      useState("Unassigned");
-
-  const [assignees, setAssignees] =
-      useState([]);
-
-  const [isLoadingAssignees, setIsLoadingAssignees] =
-      useState(false);
+  const [assignedToId, setAssignedToId] =
+      useState("");
 
   const [isSaving, setIsSaving] =
       useState(false);
 
   /*
    * =========================================================
-   * LOAD ASSIGNEES
-   *
-   * Fetch enabled users from the database whenever
-   * the modal is opened.
+   * LOAD / REFRESH ASSIGNEES
    * =========================================================
    */
 
@@ -86,47 +85,19 @@ const CaseDetailsModal = ({
       return;
     }
 
-    const loadAssignees = async () => {
-      setIsLoadingAssignees(true);
-
-      try {
-        const users = await getAssignees();
-
-        setAssignees(
-            Array.isArray(users)
-                ? users
-                : []
-        );
-      } catch (error) {
-        console.error(
-            "Failed to load assignees:",
-            error
-        );
-
-        setAssignees([]);
-
-        toast({
-          title: "Unable to load assignees",
-          description:
-              "Could not retrieve users from the database.",
-          status: "error",
-          duration: 4000,
-          isClosable: true,
-        });
-      } finally {
-        setIsLoadingAssignees(false);
-      }
-    };
-
-    loadAssignees();
-  }, [isOpen, toast]);
+    if (
+        typeof onRefreshAssignees === "function"
+    ) {
+      onRefreshAssignees();
+    }
+  }, [
+    isOpen,
+    onRefreshAssignees,
+  ]);
 
   /*
    * =========================================================
    * POPULATE CASE DATA
-   *
-   * Whenever a different case is opened, populate the
-   * editable fields.
    * =========================================================
    */
 
@@ -135,16 +106,60 @@ const CaseDetailsModal = ({
       return;
     }
 
+    console.log(
+        "================================"
+    );
+
+    console.log(
+        "=== CASE DETAILS ITEM ==="
+    );
+
+    console.log(
+        "ITEM:",
+        item
+    );
+
+    console.log(
+        "CASE ID:",
+        item.id
+    );
+
+    console.log(
+        "ASSIGNED TO ID:",
+        item.assignedToId
+    );
+
+    console.log(
+        "ASSIGNED TO:",
+        item.assignedTo
+    );
+
+    console.log(
+        "STATUS:",
+        item.status
+    );
+
+    console.log(
+        "PRIORITY:",
+        item.priority
+    );
+
+    console.log(
+        "================================"
+    );
+
     setStatus(
-        item.status || ""
+        item.status || "In progress"
     );
 
     setPriority(
-        item.priority || ""
+        item.priority || "Medium"
     );
 
-    setAssignedTo(
-        item.assignedTo || "Unassigned"
+    setAssignedToId(
+        item.assignedToId != null
+            ? String(item.assignedToId)
+            : ""
     );
   }, [item]);
 
@@ -155,19 +170,64 @@ const CaseDetailsModal = ({
    */
 
   const handleSave = async () => {
+    if (!item) {
+      return;
+    }
+
     setIsSaving(true);
 
     try {
+      /*
+       * IMPORTANT:
+       * Send assignedToId, NOT assignedTo username.
+       */
+
       const payload = {
         status,
-
         priority,
 
-        assignedTo:
-            assignedTo === "Unassigned"
-                ? null
-                : assignedTo,
+        assignedToId:
+            assignedToId !== ""
+                ? Number(assignedToId)
+                : null,
       };
+
+      console.log(
+          "================================"
+      );
+
+      console.log(
+          "=== CASE DETAILS SAVE ==="
+      );
+
+      console.log(
+          "CASE ID:",
+          item.id
+      );
+
+      console.log(
+          "PAYLOAD:",
+          payload
+      );
+
+      console.log(
+          "STATUS:",
+          payload.status
+      );
+
+      console.log(
+          "PRIORITY:",
+          payload.priority
+      );
+
+      console.log(
+          "ASSIGNED TO ID:",
+          payload.assignedToId
+      );
+
+      console.log(
+          "================================"
+      );
 
       await updateCase(
           item.id,
@@ -177,7 +237,7 @@ const CaseDetailsModal = ({
       toast({
         title: "Case updated",
         description:
-            `${item.id} has been updated successfully.`,
+            `Case ${item.id} was updated successfully.`,
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -190,6 +250,10 @@ const CaseDetailsModal = ({
       onClose();
 
     } catch (err) {
+      console.error(
+          "Failed to update case:",
+          err
+      );
 
       toast({
         title: "Failed to update case",
@@ -251,9 +315,7 @@ const CaseDetailsModal = ({
             overflow="hidden"
         >
 
-          {/* ===================================================
-            HEADER
-        =================================================== */}
+          {/* HEADER */}
 
           <ModalHeader
               px={6}
@@ -279,14 +341,19 @@ const CaseDetailsModal = ({
 
               </HStack>
 
+              <Text
+                  fontSize="xs"
+                  color="gray.500"
+              >
+                Case ID: {item.id}
+              </Text>
+
             </Stack>
           </ModalHeader>
 
           <ModalCloseButton />
 
-          {/* ===================================================
-            BODY
-        =================================================== */}
+          {/* BODY */}
 
           <ModalBody
               px={6}
@@ -294,9 +361,7 @@ const CaseDetailsModal = ({
           >
             <Stack spacing={6}>
 
-              {/* =================================================
-                CASE INFORMATION
-            ================================================= */}
+              {/* CASE INFORMATION */}
 
               <Box>
 
@@ -309,8 +374,6 @@ const CaseDetailsModal = ({
                 </Text>
 
                 <Stack spacing={3}>
-
-                  {/* Description */}
 
                   <Box>
 
@@ -330,8 +393,6 @@ const CaseDetailsModal = ({
 
                   </Box>
 
-                  {/* Case metadata */}
-
                   <SimpleGrid
                       columns={{
                         base: 1,
@@ -339,8 +400,6 @@ const CaseDetailsModal = ({
                       }}
                       spacing={4}
                   >
-
-                    {/* Case ID */}
 
                     <Box>
 
@@ -359,8 +418,6 @@ const CaseDetailsModal = ({
 
                     </Box>
 
-                    {/* System */}
-
                     <Box>
 
                       <Text
@@ -373,13 +430,10 @@ const CaseDetailsModal = ({
                       </Text>
 
                       <Text fontSize="sm">
-                        {item.system ||
-                            "—"}
+                        {item.system || "—"}
                       </Text>
 
                     </Box>
-
-                    {/* Date */}
 
                     <Box>
 
@@ -393,8 +447,7 @@ const CaseDetailsModal = ({
                       </Text>
 
                       <Text fontSize="sm">
-                        {item.openedAt ||
-                            "—"}
+                        {item.openedAt || "—"}
                       </Text>
 
                     </Box>
@@ -407,9 +460,7 @@ const CaseDetailsModal = ({
 
               <Divider />
 
-              {/* =================================================
-                UPDATE CASE
-            ================================================= */}
+              {/* UPDATE CASE */}
 
               <Box>
 
@@ -429,9 +480,7 @@ const CaseDetailsModal = ({
                     spacing={4}
                 >
 
-                  {/* =================================================
-                    STATUS
-                ================================================= */}
+                  {/* STATUS */}
 
                   <FormControl>
 
@@ -448,6 +497,7 @@ const CaseDetailsModal = ({
                             )
                         }
                     >
+
                       {STATUS_OPTIONS.map(
                           (option) => (
                               <option
@@ -458,13 +508,12 @@ const CaseDetailsModal = ({
                               </option>
                           )
                       )}
+
                     </Select>
 
                   </FormControl>
 
-                  {/* =================================================
-                    PRIORITY
-                ================================================= */}
+                  {/* PRIORITY */}
 
                   <FormControl>
 
@@ -481,6 +530,7 @@ const CaseDetailsModal = ({
                             )
                         }
                     >
+
                       {PRIORITY_OPTIONS.map(
                           (option) => (
                               <option
@@ -491,13 +541,12 @@ const CaseDetailsModal = ({
                               </option>
                           )
                       )}
+
                     </Select>
 
                   </FormControl>
 
-                  {/* =================================================
-                    ASSIGNEE
-                ================================================= */}
+                  {/* ASSIGNEE */}
 
                   <FormControl>
 
@@ -505,77 +554,83 @@ const CaseDetailsModal = ({
                       Assignee
                     </FormLabel>
 
-                    <Select
-                        size="sm"
-                        value={assignedTo}
-                        onChange={(event) =>
-                            setAssignedTo(
-                                event.target.value
-                            )
-                        }
-                        isDisabled={
-                          isLoadingAssignees
-                        }
-                    >
+                    {isLoadingAssignees ? (
 
-                      {/* Unassigned */}
-
-                      <option value="Unassigned">
-                        Unassigned
-                      </option>
-
-                      {/* Loading */}
-
-                      {isLoadingAssignees ? (
-                          <option
-                              value=""
-                              disabled
-                          >
-                            Loading users...
-                          </option>
-                      ) : (
-
-                          /*
-                           * Users from database
-                           */
-
-                          assignees.map(
-                              (user) => (
-                                  <option
-                                      key={user.id}
-                                      value={
-                                        user.username
-                                      }
-                                  >
-                                    {user.username}
-                                    {" — "}
-                                    {user.email}
-                                  </option>
-                              )
-                          )
-
-                      )}
-
-                    </Select>
-
-                    {/* Small loading indicator */}
-
-                    {isLoadingAssignees && (
                         <HStack
-                            mt={2}
-                            spacing={2}
+                            borderWidth="1px"
+                            borderRadius="md"
+                            px={3}
+                            py={2}
                         >
-                          <Spinner
-                              size="xs"
-                          />
 
-                          <Text
-                              fontSize="xs"
-                              color="text.muted"
-                          >
+                          <Spinner size="sm" />
+
+                          <Text fontSize="sm">
                             Loading users...
                           </Text>
+
                         </HStack>
+
+                    ) : (
+
+                        <Select
+                            size="sm"
+                            value={assignedToId}
+                            onChange={(event) =>
+                                setAssignedToId(
+                                    event.target.value
+                                )
+                            }
+                        >
+
+                          <option value="">
+                            Unassigned
+                          </option>
+
+                          {assignees.map(
+                              (user) => {
+
+                                const userId =
+                                    user.id ??
+                                    user.userId;
+
+                                if (
+                                    userId === null ||
+                                    userId === undefined
+                                ) {
+                                  return null;
+                                }
+
+                                return (
+                                    <option
+                                        key={userId}
+                                        value={String(userId)}
+                                    >
+                                      {user.username ||
+                                          user.fullName ||
+                                          user.name ||
+                                          user.email}
+                                      {" — "}
+                                      {user.email || ""}
+                                    </option>
+                                );
+                              }
+                          )}
+
+                        </Select>
+
+                    )}
+
+                    {!isLoadingAssignees && (
+                        <Text
+                            fontSize="xs"
+                            color="gray.500"
+                            mt={1}
+                        >
+                          Current assignee:{" "}
+                          {item.assignedTo ||
+                              "Unassigned"}
+                        </Text>
                     )}
 
                   </FormControl>
@@ -584,12 +639,11 @@ const CaseDetailsModal = ({
 
               </Box>
 
-              {/* =================================================
-                REFERENCES
-            ================================================= */}
+              {/* REFERENCES */}
 
               {(hasJiraRefs ||
                   hasVendorRefs) && (
+
                   <>
                     <Divider />
 
@@ -614,9 +668,7 @@ const CaseDetailsModal = ({
                                 colorScheme="purple"
                             >
                               Jira{" "}
-                              {item.jiraRefs.join(
-                                  ", "
-                              )}
+                              {item.jiraRefs.join(", ")}
                             </Badge>
                         )}
 
@@ -626,9 +678,7 @@ const CaseDetailsModal = ({
                                 colorScheme="orange"
                             >
                               Vendor{" "}
-                              {item.vendorRefs.join(
-                                  ", "
-                              )}
+                              {item.vendorRefs.join(", ")}
                             </Badge>
                         )}
 
@@ -642,15 +692,14 @@ const CaseDetailsModal = ({
             </Stack>
           </ModalBody>
 
-          {/* ===================================================
-            FOOTER
-        =================================================== */}
+          {/* FOOTER */}
 
           <ModalFooter
               px={6}
               py={4}
               borderTopWidth="1px"
           >
+
             <HStack spacing={3}>
 
               <Button
@@ -671,6 +720,7 @@ const CaseDetailsModal = ({
               </Button>
 
             </HStack>
+
           </ModalFooter>
 
         </ModalContent>

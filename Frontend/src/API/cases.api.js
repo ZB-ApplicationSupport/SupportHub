@@ -6,7 +6,6 @@ import api from "./axios";
 // ============================================================
 
 const statusToDisplay = (s) => {
-
     if (!s) return "";
 
     const map = {
@@ -25,7 +24,6 @@ const statusToDisplay = (s) => {
 // ============================================================
 
 const statusToApi = (s) => {
-
     if (!s) return "";
 
     const map = {
@@ -50,7 +48,6 @@ const statusToApi = (s) => {
 // ============================================================
 
 export const mapCaseFromApi = (c) => {
-
     if (!c) return null;
 
     const openedAt =
@@ -58,29 +55,13 @@ export const mapCaseFromApi = (c) => {
             ? new Date(c.openedAt)
                 .toISOString()
                 .slice(0, 10)
-
             : c.createdAt
                 ? new Date(c.createdAt)
                     .toISOString()
                     .slice(0, 10)
-
                 : "";
 
-
-    const jiraRefs =
-        Array.isArray(c.jiraRefs)
-            ? c.jiraRefs
-            : [];
-
-
-    const vendorRefs =
-        Array.isArray(c.vendorRefs)
-            ? c.vendorRefs
-            : [];
-
-
     return {
-
         id:
             c.id != null
                 ? String(c.id)
@@ -89,10 +70,25 @@ export const mapCaseFromApi = (c) => {
         caseId:
         c.id,
 
+        supportSystemId:
+            c.supportSystemId != null
+                ? Number(c.supportSystemId)
+                : null,
+
         system:
+            c.supportSystemName ||
             c.systemName ||
             c.system ||
             "",
+
+        assignedToId:
+            c.assignedToId != null
+                ? Number(c.assignedToId)
+                : null,
+
+        assignedTo:
+            c.assignedTo ||
+            "Unassigned",
 
         status:
             statusToDisplay(c.status) ||
@@ -101,10 +97,6 @@ export const mapCaseFromApi = (c) => {
         priority:
             c.priority ||
             "Medium",
-
-        assignedTo:
-            c.assignedTo ||
-            "Unassigned",
 
         openedAt,
 
@@ -121,10 +113,6 @@ export const mapCaseFromApi = (c) => {
         description:
             c.description ||
             "",
-
-        jiraRefs,
-
-        vendorRefs,
 
         createdAt:
         c.createdAt,
@@ -143,77 +131,80 @@ export const mapCaseFromApi = (c) => {
 // ============================================================
 
 export const mapCaseToApi = (c) => {
+    const payload = {};
 
-    const jiraRefs =
-        typeof c.jiraRefs === "string"
+    /*
+     * SUMMARY
+     */
 
-            ? c.jiraRefs
-                .split(",")
-                .map((x) => x.trim())
-                .filter(Boolean)
-
-            : Array.isArray(c.jiraRefs)
-                ? c.jiraRefs
-                : [];
-
-
-    const vendorRefs =
-        typeof c.vendorRefs === "string"
-
-            ? c.vendorRefs
-                .split(",")
-                .map((x) => x.trim())
-                .filter(Boolean)
-
-            : Array.isArray(c.vendorRefs)
-                ? c.vendorRefs
-                : [];
-
-
-    return {
-
-        title:
+    if (
+        c.summary !== undefined ||
+        c.title !== undefined
+    ) {
+        payload.summary =
             c.summary ||
             c.title ||
-            "",
+            "";
+    }
 
-        summary:
-            c.summary ||
-            c.title ||
-            "",
+    /*
+     * DESCRIPTION
+     */
 
-        description:
-            c.description ||
-            "",
+    if (c.description !== undefined) {
+        payload.description =
+            c.description || "";
+    }
 
-        systemName:
-            c.system ||
-            c.systemName ||
-            "",
+    /*
+     * SUPPORT SYSTEM
+     */
 
-        priority:
-            c.priority ||
-            "Medium",
+    if (c.supportSystemId !== undefined) {
+        payload.supportSystemId =
+            c.supportSystemId !== null &&
+            c.supportSystemId !== ""
+                ? Number(c.supportSystemId)
+                : null;
+    }
 
-        assignedTo:
-            c.assignedTo === "Unassigned"
-                ? null
-                : c.assignedTo ||
-                null,
+    /*
+     * PRIORITY
+     */
 
-        status:
+    if (c.priority !== undefined) {
+        payload.priority =
+            c.priority || "Medium";
+    }
+
+    /*
+     * ASSIGNEE
+     *
+     * IMPORTANT:
+     * Always use assignedToId.
+     *
+     * Do NOT send username here.
+     */
+
+    if (c.assignedToId !== undefined) {
+        payload.assignedToId =
+            c.assignedToId !== null &&
+            c.assignedToId !== ""
+                ? Number(c.assignedToId)
+                : null;
+    }
+
+    /*
+     * STATUS
+     */
+
+    if (c.status !== undefined) {
+        payload.status =
             statusToApi(c.status) ||
-            "IN_PROGRESS",
+            "IN_PROGRESS";
+    }
 
-        jiraRefs,
-
-        vendorRefs,
-
-        openedAt:
-            c.openedAt
-                ? new Date(c.openedAt).toISOString()
-                : null,
-    };
+    return payload;
 };
 
 
@@ -222,12 +213,13 @@ export const mapCaseToApi = (c) => {
 // ============================================================
 
 export const getCases = async () => {
-
     const res =
         await api.get("/cases/get");
 
     const list =
-        res.data || [];
+        Array.isArray(res.data)
+            ? res.data
+            : [];
 
     return list.map(mapCaseFromApi);
 };
@@ -238,19 +230,16 @@ export const getCases = async () => {
 // ============================================================
 
 export const getCaseById = async (id) => {
-
     const numId =
         typeof id === "string" &&
         id.startsWith("CT-")
             ? id.replace("CT-", "")
             : id;
 
-
     const res =
         await api.get(
             `/cases/get/${numId}`
         );
-
 
     return mapCaseFromApi(
         res.data
@@ -263,13 +252,28 @@ export const getCaseById = async (id) => {
 // ============================================================
 
 export const createCase = async (payload) => {
+    const apiPayload =
+        mapCaseToApi(payload);
+
+    console.log(
+        "=== CREATE CASE ==="
+    );
+
+    console.log(
+        "Original payload:",
+        payload
+    );
+
+    console.log(
+        "API payload:",
+        apiPayload
+    );
 
     const res =
         await api.post(
             "/cases/add",
-            mapCaseToApi(payload)
+            apiPayload
         );
-
 
     return mapCaseFromApi(
         res.data
@@ -285,20 +289,57 @@ export const updateCase = async (
     id,
     payload
 ) => {
-
     const numId =
         typeof id === "string" &&
         id.startsWith("CT-")
             ? id.replace("CT-", "")
             : id;
 
+    const apiPayload =
+        mapCaseToApi(payload);
+
+    console.log(
+        "================================"
+    );
+
+    console.log(
+        "=== UPDATE CASE ==="
+    );
+
+    console.log(
+        "CASE ID:",
+        numId
+    );
+
+    console.log(
+        "ORIGINAL PAYLOAD:",
+        payload
+    );
+
+    console.log(
+        "API PAYLOAD:",
+        apiPayload
+    );
+
+    console.log(
+        "ASSIGNED TO ID:",
+        apiPayload.assignedToId
+    );
+
+    console.log(
+        "================================"
+    );
 
     const res =
         await api.put(
             `/cases/update/${numId}`,
-            mapCaseToApi(payload)
+            apiPayload
         );
 
+    console.log(
+        "UPDATE RESPONSE:",
+        res.data
+    );
 
     return mapCaseFromApi(
         res.data
@@ -311,13 +352,14 @@ export const updateCase = async (
 // ============================================================
 
 export const getAssignees = async () => {
-
     const response =
         await api.get(
             "/users/assignees"
         );
 
-    return response.data;
+    return Array.isArray(response.data)
+        ? response.data
+        : [];
 };
 
 
@@ -326,7 +368,6 @@ export const getAssignees = async () => {
 // ============================================================
 
 export const getSystems = async () => {
-
     const response =
         await api.get(
             "/systems"

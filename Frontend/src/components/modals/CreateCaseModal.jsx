@@ -266,10 +266,10 @@ const CreateCaseModal = ({
                 initialValues={{
                   summary: "",
                   description: "",
-                  system: "",
+                  supportSystemId: "",
                   priority: "Medium",
-                  status: "In progress",
-                  assignedTo: "Unassigned",
+                  status: "IN_PROGRESS",
+                  assignedToId: "",
                 }}
 
                 systems={systems}

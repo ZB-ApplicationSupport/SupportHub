@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Box, Heading, SimpleGrid, Stack, Text } from "@chakra-ui/react";
 import { useAppContext } from "../../context/AppContext";
 import { getCases } from "../../API/cases.api";
-import { recentActivity } from "../../data/activity";
 import DashboardOverview from "./DashboardOverview";
 import CasesBySystemChart from "../../components/charts/CasesBySystemChart";
 
@@ -13,6 +12,18 @@ const buildCasesBySystem = (items) => {
     return acc;
   }, {});
   return Object.keys(map).map((key) => ({ system: key, cases: map[key] }));
+};
+
+const buildRecentActivity = (items) => {
+    return [...(items || [])]
+        .sort((a, b) => new Date(b.lastUpdatedAt || b.createdAt || 0) - new Date(a.lastUpdatedAt || a.createdAt || 0))
+        .slice(0, 5)
+        .map((item) => ({
+            id: item.id,
+            caseId: item.caseId ?? item.id,
+            summary: item.summary || item.title || "Case updated",
+            updatedBy: item.createdByEmail || "Unknown",
+        }));
 };
 
 const DashboardPage = () => {
@@ -26,6 +37,7 @@ const DashboardPage = () => {
   }, []);
 
   const systemData = buildCasesBySystem(cases);
+    const recentActivity = buildRecentActivity(cases);
 
 
   const roleWidgets = {

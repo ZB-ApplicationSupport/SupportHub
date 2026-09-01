@@ -2,106 +2,193 @@ package com.caseapp.util;
 
 import com.caseapp.dto.CaseDTO;
 import com.caseapp.entity.Case;
+import com.caseapp.entity.SupportSystem;
 import com.caseapp.entity.User;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 public final class CaseMapper {
 
-    private static final String REF_SEP = ",";
+    private CaseMapper() {
+    }
 
-    public static Case toEntity(CaseDTO dto, User createdBy) {
-        if (dto == null) return null;
+    public static Case toEntity(
+            CaseDTO dto,
+            User createdBy,
+            SupportSystem supportSystem,
+            User assignedTo
+    ) {
+
+        if (dto == null) {
+            return null;
+        }
+
         Case entity = new Case();
-        entity.setTitle(dto.getTitle() != null ? dto.getTitle() : dto.getSummary());
-        entity.setDescription(dto.getDescription());
+
         entity.setSummary(dto.getSummary());
-        entity.setSystemName(dto.getSystemName());
+        entity.setDescription(dto.getDescription());
+        entity.setSupportSystem(supportSystem);
         entity.setPriority(dto.getPriority());
-        entity.setAssignedTo(dto.getAssignedTo());
-        entity.setStatus(dto.getStatus());
-        entity.setOpenedAt(dto.getOpenedAt() != null ? dto.getOpenedAt() : java.time.LocalDateTime.now());
+        entity.setAssignedTo(assignedTo);
         entity.setCreatedBy(createdBy);
-        entity.setJiraRefs(listToRefString(dto.getJiraRefs()));
-        entity.setVendorRefs(listToRefString(dto.getVendorRefs()));
+        entity.setStatus(dto.getStatus());
+
         return entity;
     }
 
-    public static void updateEntityFromDto(Case entity, CaseDTO dto) {
 
-        if (dto.getTitle() != null) {
-            entity.setTitle(dto.getTitle());
+    public static void updateEntityFromDto(
+            Case entity,
+            CaseDTO dto,
+            SupportSystem supportSystem,
+            User assignedTo
+    ) {
+
+        if (entity == null || dto == null) {
+            return;
         }
 
-        if (dto.getSummary() != null) {
+
+        // =====================================================
+// SUMMARY
+// =====================================================
+
+        if (dto.getSummary() != null && !dto.getSummary().isBlank()) {
             entity.setSummary(dto.getSummary());
         }
 
-        if (dto.getDescription() != null) {
+
+// =====================================================
+// DESCRIPTION
+// =====================================================
+
+        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
             entity.setDescription(dto.getDescription());
         }
 
-        if (dto.getSystemName() != null) {
-            entity.setSystemName(dto.getSystemName());
+
+        // =====================================================
+        // SUPPORT SYSTEM
+        // =====================================================
+
+        if (supportSystem != null) {
+
+            entity.setSupportSystem(
+                    supportSystem
+            );
         }
+
+
+        // =====================================================
+        // PRIORITY
+        // =====================================================
 
         if (dto.getPriority() != null) {
-            entity.setPriority(dto.getPriority());
+
+            entity.setPriority(
+                    dto.getPriority()
+            );
         }
 
-        // Allow null so "Unassigned" can clear the assignee
-        entity.setAssignedTo(dto.getAssignedTo());
+
+        // =====================================================
+        // ASSIGNEE
+        // =====================================================
+
+        if (assignedTo != null) {
+
+            entity.setAssignedTo(
+                    assignedTo
+            );
+        }
+
+
+        // =====================================================
+        // STATUS
+        // =====================================================
 
         if (dto.getStatus() != null) {
-            entity.setStatus(dto.getStatus());
-        }
 
-        if (dto.getJiraRefs() != null) {
-            entity.setJiraRefs(
-                    listToRefString(dto.getJiraRefs())
+            entity.setStatus(
+                    dto.getStatus()
             );
         }
 
-        if (dto.getVendorRefs() != null) {
-            entity.setVendorRefs(
-                    listToRefString(dto.getVendorRefs())
-            );
-        }
+
+        // =====================================================
+        // UPDATED TIMESTAMP
+        // =====================================================
+
+        entity.setLastUpdatedAt(
+                LocalDateTime.now()
+        );
     }
+
 
     public static CaseDTO toDTO(Case entity) {
-        if (entity == null) return null;
+
+        if (entity == null) {
+            return null;
+        }
+
         CaseDTO dto = new CaseDTO();
+
         dto.setId(entity.getId());
-        dto.setTitle(entity.getTitle());
-        dto.setDescription(entity.getDescription());
+
         dto.setSummary(entity.getSummary());
-        dto.setSystemName(entity.getSystemName());
+
+        dto.setDescription(entity.getDescription());
+
         dto.setPriority(entity.getPriority());
-        dto.setAssignedTo(entity.getAssignedTo());
+
         dto.setStatus(entity.getStatus());
-        dto.setOpenedAt(entity.getOpenedAt());
+
         dto.setCreatedAt(entity.getCreatedAt());
+
         dto.setLastUpdatedAt(entity.getLastUpdatedAt());
-        dto.setCreatedByEmail(entity.getCreatedBy() != null ? entity.getCreatedBy().getEmail() : null);
-        dto.setJiraRefs(refStringToList(entity.getJiraRefs()));
-        dto.setVendorRefs(refStringToList(entity.getVendorRefs()));
+
+
+        // Support system
+
+        if (entity.getSupportSystem() != null) {
+
+            dto.setSupportSystemId(
+                    entity.getSupportSystem().getId()
+            );
+
+            dto.setSupportSystemName(
+                    entity.getSupportSystem().getName()
+            );
+        }
+
+
+        // Assignee
+
+        if (entity.getAssignedTo() != null) {
+
+            dto.setAssignedToId(
+                    entity.getAssignedTo().getId()
+            );
+
+            dto.setAssignedTo(
+                    entity.getAssignedTo().getUsername()
+            );
+        }
+
+
+        // Creator
+
+        if (entity.getCreatedBy() != null) {
+
+            dto.setCreatedById(
+                    entity.getCreatedBy().getId()
+            );
+
+            dto.setCreatedByEmail(
+                    entity.getCreatedBy().getEmail()
+            );
+        }
+
         return dto;
-    }
-
-    private static String listToRefString(List<String> list) {
-        if (list == null || list.isEmpty()) return null;
-        return String.join(REF_SEP, list);
-    }
-
-    private static List<String> refStringToList(String s) {
-        if (s == null || s.isBlank()) return Collections.emptyList();
-        return Arrays.stream(s.split(REF_SEP))
-                .map(String::trim)
-                .filter(x -> !x.isEmpty())
-                .collect(Collectors.toList());
     }
 }

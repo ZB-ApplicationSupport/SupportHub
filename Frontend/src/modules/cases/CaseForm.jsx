@@ -13,12 +13,11 @@ import {
   Box,
 } from "@chakra-ui/react";
 
-
 const CaseForm = ({
                     initialValues,
                     onSubmit,
-                    submitLabel,
-                    isSubmitting,
+                    submitLabel = "Save",
+                    isSubmitting = false,
 
                     systems = [],
                     assignees = [],
@@ -28,44 +27,148 @@ const CaseForm = ({
                   }) => {
 
   const [values, setValues] =
-      React.useState(initialValues);
+      React.useState(
+          initialValues || {}
+      );
 
+  React.useEffect(() => {
+    setValues(
+        initialValues || {}
+    );
+  }, [initialValues]);
 
-  // =========================================================
-  // HANDLE INPUT CHANGES
-  // =========================================================
+  /*
+   * =========================================================
+   * HANDLE CHANGE
+   * =========================================================
+   */
 
   const handleChange = (event) => {
+    const {
+      name,
+      value,
+    } = event.target;
 
     setValues((prev) => ({
       ...prev,
-      [event.target.name]:
-      event.target.value,
+      [name]: value,
     }));
   };
 
-
-  // =========================================================
-  // HANDLE SUBMIT
-  // =========================================================
+  /*
+   * =========================================================
+   * HANDLE SUBMIT
+   * =========================================================
+   */
 
   const handleSubmit = (event) => {
-
     event.preventDefault();
 
-    onSubmit(values);
+    const submittedValues = {
+      ...values,
+
+      assignedToId:
+          values.assignedToId !== undefined &&
+          values.assignedToId !== null &&
+          values.assignedToId !== ""
+              ? Number(values.assignedToId)
+              : null,
+
+      supportSystemId:
+          values.supportSystemId !== undefined &&
+          values.supportSystemId !== null &&
+          values.supportSystemId !== ""
+              ? Number(values.supportSystemId)
+              : null,
+    };
+
+    console.log(
+        "================================"
+    );
+
+    console.log(
+        "=== CASE FORM SUBMIT ==="
+    );
+
+    console.log(
+        "FORM VALUES:",
+        submittedValues
+    );
+
+    console.log(
+        "ASSIGNED TO ID:",
+        submittedValues.assignedToId
+    );
+
+    console.log(
+        "SUPPORT SYSTEM ID:",
+        submittedValues.supportSystemId
+    );
+
+    console.log(
+        "================================"
+    );
+
+    if (onSubmit) {
+      onSubmit(
+          submittedValues
+      );
+    }
   };
 
+  /*
+   * =========================================================
+   * ASSIGNEE HELPERS
+   * =========================================================
+   */
+
+  const getAssigneeValue = (person) => {
+    if (
+        typeof person === "object" &&
+        person !== null
+    ) {
+      return (
+          person.id ??
+          person.userId ??
+          ""
+      );
+    }
+
+    return person || "";
+  };
+
+  const getAssigneeLabel = (person) => {
+    if (
+        typeof person === "object" &&
+        person !== null
+    ) {
+      return (
+          person.fullName ||
+          person.name ||
+          person.username ||
+          person.email ||
+          "Unknown user"
+      );
+    }
+
+    return (
+        person ||
+        "Unknown user"
+    );
+  };
+
+  /*
+   * =========================================================
+   * RENDER
+   * =========================================================
+   */
 
   return (
-
       <form onSubmit={handleSubmit}>
 
         <Stack spacing={5}>
 
-          {/* ===================================================
-            CASE SUMMARY
-        ==================================================== */}
+          {/* SUMMARY */}
 
           <FormControl isRequired>
 
@@ -84,10 +187,7 @@ const CaseForm = ({
 
           </FormControl>
 
-
-          {/* ===================================================
-            DESCRIPTION
-        ==================================================== */}
+          {/* DESCRIPTION */}
 
           <FormControl isRequired>
 
@@ -108,10 +208,7 @@ const CaseForm = ({
 
           </FormControl>
 
-
-          {/* ===================================================
-            SYSTEM
-        ==================================================== */}
+          {/* SYSTEM */}
 
           <FormControl isRequired>
 
@@ -145,24 +242,28 @@ const CaseForm = ({
             ) : (
 
                 <Select
-                    name="system"
+                    name="supportSystemId"
                     value={
-                        values.system || ""
+                      values.supportSystemId != null
+                          ? String(
+                              values.supportSystemId
+                          )
+                          : ""
                     }
                     onChange={handleChange}
                     placeholder="Select a system"
                 >
 
-                  {systems.map((system) => (
-
-                      <option
-                          key={system.id}
-                          value={system.name}
-                      >
-                        {system.name}
-                      </option>
-
-                  ))}
+                  {systems.map(
+                      (system) => (
+                          <option
+                              key={system.id}
+                              value={system.id}
+                          >
+                            {system.name}
+                          </option>
+                      )
+                  )}
 
                 </Select>
 
@@ -170,10 +271,7 @@ const CaseForm = ({
 
           </FormControl>
 
-
-          {/* ===================================================
-            PRIORITY
-        ==================================================== */}
+          {/* PRIORITY */}
 
           <FormControl isRequired>
 
@@ -209,10 +307,7 @@ const CaseForm = ({
 
           </FormControl>
 
-
-          {/* ===================================================
-            STATUS
-        ==================================================== */}
+          {/* STATUS */}
 
           <FormControl isRequired>
 
@@ -227,10 +322,6 @@ const CaseForm = ({
                 }
                 onChange={handleChange}
             >
-
-              <option value="Open">
-                Open
-              </option>
 
               <option value="In progress">
                 In progress
@@ -252,10 +343,7 @@ const CaseForm = ({
 
           </FormControl>
 
-
-          {/* ===================================================
-            ASSIGNEE
-        ==================================================== */}
+          {/* ASSIGNEE */}
 
           <FormControl>
 
@@ -289,46 +377,55 @@ const CaseForm = ({
             ) : (
 
                 <Select
-                    name="assignedTo"
+                    name="assignedToId"
                     value={
-                        values.assignedTo || ""
+                      values.assignedToId != null
+                          ? String(
+                              values.assignedToId
+                          )
+                          : ""
                     }
                     onChange={handleChange}
-                    placeholder="Select an assignee"
                 >
 
-                  <option value="Unassigned">
+                  <option value="">
                     Unassigned
                   </option>
 
-                  {assignees.map((user) => {
+                  {assignees.map(
+                      (person) => {
 
-                    const value =
-                        user.username ||
-                        user.email ||
-                        user.name;
+                        const value =
+                            getAssigneeValue(
+                                person
+                            );
 
-                    const label =
-                        user.fullName ||
-                        user.name ||
-                        user.username ||
-                        user.email;
+                        const label =
+                            getAssigneeLabel(
+                                person
+                            );
 
-                    return (
+                        if (
+                            value === "" ||
+                            value === null ||
+                            value === undefined
+                        ) {
+                          return null;
+                        }
 
-                        <option
-                            key={
-                                user.id ||
-                                value
-                            }
-                            value={value}
-                        >
-                          {label}
-                        </option>
-
-                    );
-
-                  })}
+                        return (
+                            <option
+                                key={value}
+                                value={String(value)}
+                            >
+                              {label}
+                              {person?.email
+                                  ? ` — ${person.email}`
+                                  : ""}
+                            </option>
+                        );
+                      }
+                  )}
 
                 </Select>
 
@@ -336,10 +433,7 @@ const CaseForm = ({
 
           </FormControl>
 
-
-          {/* ===================================================
-            SUBMIT
-        ==================================================== */}
+          {/* SUBMIT */}
 
           <Button
               type="submit"
@@ -360,6 +454,5 @@ const CaseForm = ({
       </form>
   );
 };
-
 
 export default CaseForm;

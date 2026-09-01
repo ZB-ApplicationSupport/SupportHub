@@ -9,5 +9,8 @@ import java.util.List;
 
 @Repository
 public interface CaseRepository extends JpaRepository<Case, Long> {
-    List<Case> findByCreatedBy(User user);
+    List<Case> findByCreatedByOrAssignedTo(
+            User createdBy,
+            User assignedTo
+    );
 }

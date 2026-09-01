@@ -25,36 +25,20 @@ public class CaseController {
     private final UserService userService;
 
     @PostMapping("/add")
-    public ResponseEntity<CaseDTO> createCase(@Valid @RequestBody CaseDTO dto, Authentication authentication) {
-        String username = authentication.getName();
-        User user = userService.getUserByUsername(username);
-        Case entity = CaseMapper.toEntity(dto, user);
-        entity.setCreatedAt(java.time.LocalDateTime.now());
-        entity.setLastUpdatedAt(java.time.LocalDateTime.now());
-        if (entity.getOpenedAt() == null) {
-            entity.setOpenedAt(java.time.LocalDateTime.now());
-        }
-        Case created = caseService.createCase(entity);
-        return ResponseEntity.ok(CaseMapper.toDTO(created));
-    }
+    public ResponseEntity<CaseDTO> createCase(
+            @Valid @RequestBody CaseDTO dto,
+            Authentication authentication
+    ) {
 
-    @GetMapping("/assignees")
-    public ResponseEntity<List<UserDTO>> getAssignees() {
+        Case created =
+                caseService.createCase(
+                        dto,
+                        authentication.getName()
+                );
 
-        List<UserDTO> users =
-                userService.getEnabledUsers()
-                        .stream()
-                        .map(user -> new UserDTO(
-                                user.getId(),
-                                user.getUsername(),
-                                user.getEmail(),
-                                "",
-                                user.getRole(),
-                                user.isEnabled()
-                        ))
-                        .toList();
-
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(
+                CaseMapper.toDTO(created)
+        );
     }
 
     @GetMapping("/get")
@@ -119,44 +103,73 @@ public class CaseController {
 
     @GetMapping("/get/{id}")
     public ResponseEntity<CaseDTO> getCaseById(@PathVariable Long id) {
+
         Case caseEntity = caseService.getCaseById(id);
-        return ResponseEntity.ok(CaseMapper.toDTO(caseEntity));
+
+        CaseDTO dto = CaseMapper.toDTO(caseEntity);
+
+        System.out.println("=== GET CASE BY ID ===");
+        System.out.println("ID: " + dto.getId());
+        System.out.println("Summary: " + dto.getSummary());
+        System.out.println("Description: " + dto.getDescription());
+        System.out.println("Support System ID: " + dto.getSupportSystemId());
+        System.out.println("Support System Name: " + dto.getSupportSystemName());
+        System.out.println("Assigned To ID: " + dto.getAssignedToId());
+        System.out.println("Assigned To: " + dto.getAssignedTo());
+        System.out.println("Status: " + dto.getStatus());
+
+        return ResponseEntity.ok(dto);
     }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<CaseDTO> updateCase(
             @PathVariable Long id,
-            @Valid @RequestBody CaseDTO dto) {
+            @Valid @RequestBody CaseDTO dto
+    ) {
 
-        System.out.println("=== UPDATE CASE ===");
+        System.out.println("========================================");
+        System.out.println("          UPDATE CASE REQUEST");
+        System.out.println("========================================");
+
         System.out.println("ID: " + id);
-        System.out.println("Status: " + dto.getStatus());
+        System.out.println("Summary: " + dto.getSummary());
+        System.out.println("Description: " + dto.getDescription());
+        System.out.println("Support System ID: " + dto.getSupportSystemId());
+        System.out.println("Assigned To ID: " + dto.getAssignedToId());
         System.out.println("Priority: " + dto.getPriority());
-        System.out.println("Assigned To: " + dto.getAssignedTo());
+        System.out.println("Status: " + dto.getStatus());
 
-        Case existing = caseService.getCaseById(id);
+        System.out.println("========================================");
 
-        System.out.println("BEFORE UPDATE:");
-        System.out.println("Status: " + existing.getStatus());
-        System.out.println("Priority: " + existing.getPriority());
-        System.out.println("Assigned To: " + existing.getAssignedTo());
 
-        CaseMapper.updateEntityFromDto(existing, dto);
+        Case updated =
+                caseService.updateCase(
+                        id,
+                        dto
+                );
 
-        System.out.println("AFTER MAPPER:");
-        System.out.println("Status: " + existing.getStatus());
-        System.out.println("Priority: " + existing.getPriority());
-        System.out.println("Assigned To: " + existing.getAssignedTo());
 
-        existing.setLastUpdatedAt(java.time.LocalDateTime.now());
+        CaseDTO response =
+                CaseMapper.toDTO(updated);
 
-        Case saved = caseService.updateCase(existing);
 
-        System.out.println("AFTER SAVE:");
-        System.out.println("Status: " + saved.getStatus());
-        System.out.println("Priority: " + saved.getPriority());
-        System.out.println("Assigned To: " + saved.getAssignedTo());
+        System.out.println("========================================");
+        System.out.println("          UPDATE CASE RESPONSE");
+        System.out.println("========================================");
 
-        return ResponseEntity.ok(CaseMapper.toDTO(saved));
+        System.out.println("ID: " + response.getId());
+        System.out.println("Summary: " + response.getSummary());
+        System.out.println("Description: " + response.getDescription());
+        System.out.println("Support System ID: " + response.getSupportSystemId());
+        System.out.println("Support System Name: " + response.getSupportSystemName());
+        System.out.println("Assigned To ID: " + response.getAssignedToId());
+        System.out.println("Assigned To: " + response.getAssignedTo());
+        System.out.println("Priority: " + response.getPriority());
+        System.out.println("Status: " + response.getStatus());
+
+        System.out.println("========================================");
+
+
+        return ResponseEntity.ok(response);
     }
 }

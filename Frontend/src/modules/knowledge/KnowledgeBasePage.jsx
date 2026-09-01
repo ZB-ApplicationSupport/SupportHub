@@ -19,7 +19,6 @@ import KnowledgeBaseList from "../../components/knowledge/KnowledgeBaseList";
 import CreateArticleModal from "../../components/knowledge/CreateArticleModal";
 import EditArticleModal from "../../components/knowledge/EditArticleModal";
 import { getArticles } from "../../API/knowledge.api";
-import { knowledgeCategories, knowledgeTags } from "../../data/knowledgeBase";
 import {
   filterArticles,
   sortArticles,
@@ -103,11 +102,11 @@ const KnowledgeBasePage = () => {
         <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4} alignItems="center">
           <KnowledgeBaseFilters
             system={system}
-            category={category}
+            // category={category}
             tag={tag}
             systems={systems}
-            categories={knowledgeCategories}
-            tags={knowledgeTags}
+            // categories={knowledgeCategories}
+            // tags={knowledgeTags}
             onSystemChange={setSystem}
             onCategoryChange={setCategory}
             onTagChange={setTag}

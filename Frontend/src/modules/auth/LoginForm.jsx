@@ -17,7 +17,6 @@ import {
 } from "@chakra-ui/react";
 import logo from '../../Assets/logo.png';
 import { useNavigate } from "react-router-dom";
-import { users } from "../../data/users";
 import { useAppContext } from "../../context/AppContext";
 import { login } from "../../API/auth.api";
 

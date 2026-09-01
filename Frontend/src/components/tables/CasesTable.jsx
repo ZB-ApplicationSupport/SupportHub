@@ -63,6 +63,7 @@ const CasesTable = ({
 
                         onOpenCase,
                         onRefresh,
+                        onEdit,
 
                         query,
                         status,
@@ -720,24 +721,14 @@ const CasesTable = ({
                                                 All
                                             </option>
 
-                                            <option value="Core Banking">
-                                                Core Banking
+                                            <option value="Fusion Essence">
+                                                Fusion Essence
                                             </option>
-
-                                            <option value="Payments Hub">
-                                                Payments Hub
+                                            <option value="Treasury Dealing System">
+                                                Treasury Dealing System
                                             </option>
-
-                                            <option value="Digital Channels">
-                                                Digital Channels
-                                            </option>
-
-                                            <option value="Treasury">
-                                                Treasury
-                                            </option>
-
-                                            <option value="ATM Switch">
-                                                ATM Switch
+                                            <option value="Swift">
+                                                Swift
                                             </option>
 
                                         </Select>

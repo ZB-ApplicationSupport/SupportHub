@@ -14,7 +14,6 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
-import { systemCategories } from "../../data/systems";
 import {
   getSystems,
   createSystem,
@@ -62,9 +61,8 @@ const SystemsPage = () => {
   const filteredSystems = useMemo(() => {
     return systems.filter((item) => {
       const matchesQuery =
-        !query ||
-        (item.name || "").toLowerCase().includes(query.toLowerCase()) ||
-        (item.category || "").toLowerCase().includes(query.toLowerCase());
+          !query ||
+          (item.name || "").toLowerCase().includes(query.toLowerCase());
       const matchesStatus = !status || item.status === status;
       return matchesQuery && matchesStatus;
     });
@@ -156,7 +154,7 @@ const SystemsPage = () => {
 
   const defaultFormValues = {
     name: "",
-    category: systemCategories[0],
+    //category: systemCategories[0],
     owner: "",
     status: "Active",
   };
@@ -205,7 +203,7 @@ const SystemsPage = () => {
         onClose={createModal.onClose}
         title="Add System"
         description="Register a new supported platform."
-        categories={systemCategories}
+        //categories={systemCategories}
         initialValues={defaultFormValues}
         onSave={handleSaveCreate}
       />
@@ -214,10 +212,10 @@ const SystemsPage = () => {
         onClose={() => { editModal.onClose(); setSelectedSystem(null); }}
         title="Edit System"
         description="Update system metadata and ownership."
-        categories={systemCategories}
+        //categories={systemCategories}
         initialValues={
           selectedSystem
-            ? { name: selectedSystem.name, category: selectedSystem.category, owner: selectedSystem.owner, status: selectedSystem.status }
+            ? { name: selectedSystem.name, owner: selectedSystem.owner, status: selectedSystem.status }
             : defaultFormValues
         }
         onSave={handleSaveEdit}

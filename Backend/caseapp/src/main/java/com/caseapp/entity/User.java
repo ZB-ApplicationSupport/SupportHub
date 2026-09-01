@@ -35,6 +35,9 @@ public class User {
     @OneToMany(mappedBy = "createdBy")
     private Set<Case> cases;
 
+    @OneToMany(mappedBy = "assignedTo")
+    private Set<Case> assignedCases;
+
     private boolean enabled;
 
 

@@ -8,7 +8,6 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import UsersTable from "./UsersTable";
-import { users as initialUsers } from "../../data/users";
 import AddUserModal from "../../components/modals/AddUserModal";
 import SignupRequestsTable from "./SignupRequestsTable";
 import { useAppContext } from "../../context/AppContext";
@@ -24,7 +23,7 @@ const UsersPage = () => {
   const addModal = useDisclosure();
   const toast = useToast();
   const { user } = useAppContext();
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
   const [requests, setRequests] = useState([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
   const canEditRole = user?.role === "ADMIN";
