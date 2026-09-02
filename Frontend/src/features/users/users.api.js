@@ -1,5 +1,5 @@
 // src/API/users.api.js
-import api from "./axios";
+import api from "../services/axios";
 
 // ============================================================
 // GET ALL USERS

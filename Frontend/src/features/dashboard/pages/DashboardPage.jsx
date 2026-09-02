@@ -9,7 +9,7 @@ import {
 } from "@chakra-ui/react";
 
 import { useAppContext } from "../../context/AppContext";
-import { getCases } from "../../API/cases.api";
+import { getCases } from "../../features/cases/cases.api";
 
 import DashboardOverview from "./DashboardOverview";
 import CasesBySystemChart from "../../components/charts/CasesBySystemChart";

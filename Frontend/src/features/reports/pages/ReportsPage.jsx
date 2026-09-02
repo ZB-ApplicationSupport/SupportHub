@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Box, Heading, SimpleGrid, Stack, Text } from "@chakra-ui/react";
-import { getCases } from "../../API/cases.api";
+import { getCases } from "../../features/cases/cases.api";
 import CasesBySystemChart from "../../components/charts/CasesBySystemChart";
 import CaseStatusChart from "../../components/charts/CaseStatusChart";
 
