@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-import CreateCaseModal from "../../components/modals/CreateCaseModal";
+import CreateCaseModal from "../components/CreateCaseModal";
 
 
 const CreateCase = () => {

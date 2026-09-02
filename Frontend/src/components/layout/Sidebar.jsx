@@ -12,7 +12,7 @@ import { useAppContext } from "../../context/AppContext";
 import NavItem from "./NavItem";
 import UserMenu from "./UserMenu";
 
-import logo from "../../Assets/logoWhite.png";
+import logo from "../../assets/logos/logoWhite.png";
 
 const drawerWidth = 240;
 

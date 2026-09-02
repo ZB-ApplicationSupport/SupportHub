@@ -15,21 +15,21 @@ import {
   useToast,
 } from "@chakra-ui/react";
 
-import CasesTable from "../../components/tables/CasesTable";
-import CaseDetailsModal from "../../components/modals/CaseDetailsModal";
-import CreateCaseModal from "../../components/modals/CreateCaseModal";
+import CasesTable from "../components/CasesTable";
+import CaseDetailsModal from "../components/CaseDetailsModal";
+import CreateCaseModal from "../components/CreateCaseModal";
 
 import {
   getCases,
   getAssignees,
-} from "../../API/cases.api";
+} from "../cases.api";
 
 import {
   filterCases,
   sortCases,
-} from "../../utils/caseUtils";
+} from "../case.utils";
 
-import { exportCasesToExcel } from "../../utils/exportUtils";
+import { exportCasesToExcel } from "../../../utils/exportUtils";
 
 const CasesPage = () => {
   const toast = useToast();

@@ -15,10 +15,10 @@ import {
   Text,
   useColorModeValue
 } from "@chakra-ui/react";
-import logo from '../../Assets/logo.png';
+import logo from '../../../assets/logos/logo.png';
 import { useNavigate } from "react-router-dom";
-import { useAppContext } from "../../context/AppContext";
-import { login } from "../../API/auth.api";
+import { useAppContext } from "../../../context/AppContext";
+import { login } from "../auth.api";
 
 
 const LoginForm = () => {

@@ -15,9 +15,9 @@ import {
   Text,
   useColorModeValue
 } from "@chakra-ui/react";
-import logo from '../../Assets/logo.png';
+import logo from '../../../assets/logos/logo.png';
 import { useNavigate } from "react-router-dom";
-import { requestSignup } from "../../API/signupRequests.api";
+import { requestSignup } from "../signupRequests.api";
 
 const SignUp = () => {
   const navigate = useNavigate();

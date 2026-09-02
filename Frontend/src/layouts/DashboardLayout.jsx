@@ -7,8 +7,8 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 
 import { useAppContext } from "../context/AppContext";
 
-import Sidebar from "../components/navigation/Sidebar";
-import TopNav from "../components/navigation/TopNav";
+import Sidebar from "../components/layout/Sidebar";
+import TopNav from "../components/layout/TopNav";
 
 const muiTheme = createTheme({
   palette: {

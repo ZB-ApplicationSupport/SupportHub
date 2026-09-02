@@ -13,10 +13,10 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
-import { getPasswords, createPassword } from "../../API/passwords.api";
-import PasswordsTable from "./PasswordsTable";
-import PasswordModal from "./PasswordModal";
-import { useAppContext } from "../../context/AppContext";
+import { getPasswords, createPassword } from "../passwords.api";
+import PasswordsTable from "../components/PasswordsTable";
+import PasswordModal from "../components/PasswordModal";
+import { useAppContext } from "../../../context/AppContext";
 
 const PasswordsPage = () => {
   const addModal = useDisclosure();

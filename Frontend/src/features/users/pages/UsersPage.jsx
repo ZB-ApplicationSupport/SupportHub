@@ -7,17 +7,17 @@ import {
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
-import UsersTable from "./UsersTable";
-import AddUserModal from "../../components/modals/AddUserModal";
-import SignupRequestsTable from "./SignupRequestsTable";
-import { useAppContext } from "../../context/AppContext";
+import UsersTable from "../components/UsersTable";
+import AddUserModal from "../components/AddUserModal";
+import SignupRequestsTable from "../components/SignupRequestsTable";
+import { useAppContext } from "../../../context/AppContext";
 import {
   approveSignupRequest,
   rejectSignupRequest,
   getSignupRequests,
-} from "../../API/signupRequests.api";
-import { toggleUserStatus } from "../../API/users.api";
-import { getUsers } from "../../API/users.api"; // import your API call
+} from "../../auth/signupRequests.api";
+import { toggleUserStatus } from "../users.api";
+import { getUsers } from "../users.api"; // import your API call
 
 const UsersPage = () => {
   const addModal = useDisclosure();

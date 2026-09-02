@@ -29,11 +29,11 @@ import {
 
 import {
   STATUS_COLORS,
-} from "../../utils/constants";
+} from "../../../utils/constants";
 
 import {
   updateCase,
-} from "../../API/cases.api";
+} from "../cases.api";
 
 const STATUS_OPTIONS = [
   "In progress",

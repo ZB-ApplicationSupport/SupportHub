@@ -1,4 +1,4 @@
-import api from "../services/axios";
+import api from "../../services/axios";
 
 const formatDateTime = (d) => {
   if (!d) return "";

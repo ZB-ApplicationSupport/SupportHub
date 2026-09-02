@@ -1,4 +1,4 @@
-import api from "./axios";
+import api from "../../services/axios";
 
 export const requestSignup = (data) => api.post("/signup-request", data);
 

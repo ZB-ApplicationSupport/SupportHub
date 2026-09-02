@@ -8,11 +8,11 @@ import {
     useColorModeValue,
 } from "@chakra-ui/react";
 
-import { useAppContext } from "../../context/AppContext";
-import { getCases } from "../../features/cases/cases.api";
+import { useAppContext } from "../../../context/AppContext";
+import { getCases } from "../../cases/cases.api";
 
-import DashboardOverview from "./DashboardOverview";
-import CasesBySystemChart from "../../components/charts/CasesBySystemChart";
+import DashboardOverview from "../components/DashboardOverview";
+import CasesBySystemChart from "../../../components/charts/CasesBySystemChart";
 
 const buildCasesBySystem = (items) => {
     const map = (items || []).reduce((acc, item) => {

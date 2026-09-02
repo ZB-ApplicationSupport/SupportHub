@@ -16,13 +16,13 @@ import {
   useToast,
 } from "@chakra-ui/react";
 
-import CaseForm from "../../modules/cases/CaseForm";
+import CaseForm from "./CaseForm";
 
 import {
   createCase,
   getAssignees,
   getSystems,
-} from "../../API/cases.api";
+} from "../cases.api";
 
 
 const CreateCaseModal = ({

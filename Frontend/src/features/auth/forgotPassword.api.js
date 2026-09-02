@@ -1,4 +1,4 @@
-import api from "./axios";
+import api from "../../services/axios";
 
 export const requestPasswordReset = (email) =>
   api.post("/auth/forgot-password", { email });

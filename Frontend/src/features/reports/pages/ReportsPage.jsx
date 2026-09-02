@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Box, Heading, SimpleGrid, Stack, Text } from "@chakra-ui/react";
-import { getCases } from "../../features/cases/cases.api";
-import CasesBySystemChart from "../../components/charts/CasesBySystemChart";
-import CaseStatusChart from "../../components/charts/CaseStatusChart";
+import { getCases } from "../../../features/cases/cases.api";
+import CasesBySystemChart from "../../../components/charts/CasesBySystemChart";
+import CaseStatusChart from "../../../components/charts/CaseStatusChart";
 
 const buildCasesBySystem = (items) => {
   const map = (items || []).reduce((acc, item) => {

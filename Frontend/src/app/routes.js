@@ -1,17 +1,17 @@
 import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
-import DashboardPage from "../modules/dashboard/DashboardPage";
-import CasesPage from "../modules/cases/CasesPage";
-import CreateCase from "../modules/cases/CreateCase";
-import UsersPage from "../modules/users/UsersPage";
-import LoginForm from "../modules/auth/LoginForm";
-import PasswordsPage from "../modules/passwords/PasswordsPage";
-import SignUp from "../modules/auth/SignUp";
-import ForgotPassword from "../modules/auth/ForgotPassword";
-import ResetPassword from "../modules/auth/ResetPassword";
-import ReportsPage from "../modules/reports/ReportsPage";
-import ServerDashboard from "../modules/dashboard/ServersDashboard";
+import DashboardPage from "../features/dashboard/pages/DashboardPage";
+import CasesPage from "../features/cases/pages/CasesPage";
+import CreateCase from "../features/cases/pages/CreateCase";
+import UsersPage from "../features/users/pages/UsersPage";
+import LoginForm from "../features/auth/components/LoginForm";
+import PasswordsPage from "../features/passwords/pages/PasswordsPage";
+import SignUp from "../features/auth/components/SignUp";
+import ForgotPassword from "../features/auth/pages/ForgotPassword";
+import ResetPassword from "..//features/auth/pages/ResetPassword";
+import ReportsPage from "../features/reports/pages/ReportsPage";
+import ServerDashboard from "../features/monitoring/pages/ServerMonitoringPage";
 
 const AppRoutes = () => {
   return (

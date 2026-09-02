@@ -23,8 +23,8 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import StatsCard from "./StatsCard";
-import CaseStatusChart from "../../components/charts/CaseStatusChart";
-import CasesBySystemChart from "../../components/charts/CasesBySystemChart";
+import CaseStatusChart from "../../../components/charts/CaseStatusChart";
+import CasesBySystemChart from "../../../components/charts/CasesBySystemChart";
 
 /* ============================================================
    BUILD CASES BY SYSTEM DATA

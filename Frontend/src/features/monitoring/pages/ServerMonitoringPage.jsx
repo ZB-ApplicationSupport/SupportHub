@@ -10,10 +10,10 @@ import {
     Text,
 } from "@chakra-ui/react";
 
-import MonitoringStatCard from "./MonitoringStatCard";
-import ServerStatusPanel from "./ServerStatusPanel";
-import MemoryPanel from "./MemoryPanel";
-import DiskSpacePanel from "./DiskSpacePanel";
+import MonitoringStatCard from "../components/MonitoringStatCard";
+import ServerStatusPanel from "../components/ServerStatusPanel";
+import MemoryPanel from "../components/MemoryPanel";
+import DiskSpacePanel from "../components/DiskSpacePanel";
 
 const ServerDashboard = () => {
     const [selectedServer, setSelectedServer] =

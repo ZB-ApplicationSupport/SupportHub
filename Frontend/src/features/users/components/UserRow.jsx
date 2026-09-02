@@ -2,7 +2,7 @@ import React from "react";
 import { Badge, Select, Td, Text, Tr } from "@chakra-ui/react";
 import RoleBadge from "./RoleBadge";
 import UserStatusToggle from "./UserStatusToggle";
-import { ROLES } from "../../utils/constants";
+import { ROLES } from "../../../utils/constants";
 
 const UserRow = ({ user, canEditRole, onRoleChange, onToggleStatus }) => {
   return (

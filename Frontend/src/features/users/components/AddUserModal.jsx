@@ -16,8 +16,8 @@ import {
   Text,
   useToast,
 } from "@chakra-ui/react";
-import { ROLES } from "../../utils/constants";
-import { addUser } from "../../API/users.api";
+import { ROLES } from "../../../utils/constants";
+import { addUser } from "../users.api";
 
 const AddUserModal = ({ isOpen, onClose, onSuccess }) => {
   const toast = useToast();

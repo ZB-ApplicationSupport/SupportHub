@@ -15,7 +15,8 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import logo from "../../Assets/logo.png";
+import logo from "../../../assets/logos/logo.png";
+
 
 const ResetPassword = () => {
   const navigate = useNavigate();
