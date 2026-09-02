@@ -1,21 +1,87 @@
 import React from "react";
-import { Box, Heading, Text } from "@chakra-ui/react";
+
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 
 const StatsCard = ({ label, value, helper }) => {
   return (
-    <Box bg="surface.card" p={5} borderRadius="xl" borderWidth="1px">
-      <Text fontSize="sm" color="text.muted">
-        {label}
-      </Text>
-      <Heading size="lg" mt={2}>
-        {value}
-      </Heading>
-      {helper && (
-        <Text fontSize="xs" color="text.muted" mt={1}>
-          {helper}
-        </Text>
-      )}
-    </Box>
+    <Card
+      elevation={0}
+      sx={{
+        width: "100%",
+        height: "100%",
+        minHeight: 100,
+
+        backgroundColor: "background.paper",
+
+        border: "1px solid",
+        borderColor: "divider",
+
+        borderRadius: 2,
+
+        transition: "all 0.2s ease",
+
+        "&:hover": {
+          borderColor: "primary.main",
+          boxShadow: "0 4px 14px rgba(0, 132, 61, 0.08)",
+        },
+      }}
+    >
+      <CardContent
+        sx={{
+          height: "100%",
+          p: 2.5,
+
+          "&:last-child": {
+            pb: 2.5,
+          },
+
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        {/* Label */}
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 500,
+          }}
+        >
+          {label}
+        </Typography>
+
+        {/* Value */}
+        <Typography
+          variant="h3"
+          sx={{
+            mt: 1,
+            fontWeight: 700,
+            color: "text.primary",
+            lineHeight: 1.2,
+          }}
+        >
+          {value}
+        </Typography>
+
+        {/* Optional helper text */}
+        {helper && (
+          <Box sx={{ mt: 1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+              }}
+            >
+              {helper}
+            </Typography>
+          </Box>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

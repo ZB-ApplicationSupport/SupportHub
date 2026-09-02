@@ -1,79 +1,94 @@
 import React from "react";
-import { Box, Heading, useColorModeValue, SimpleGrid } from "@chakra-ui/react";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Box, Heading, useColorModeValue } from "@chakra-ui/react";
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+} from "recharts";
 
-const defaultPalette = ["#ff7a45", "#2f855a", "#e53e3e", "#d69e2e"];
+const CaseStatusChart = ({ data = [] }) => {
+    const gridColor = useColorModeValue("#E2E8F0", "#4A5568");
+    const textColor = useColorModeValue("#4A5568", "#CBD5E0");
+    const tooltipBg = useColorModeValue("#FFFFFF", "#1A202C");
 
-const CaseStatusChart = ({ data, palette = defaultPalette }) => {
-  const tooltipBg = useColorModeValue("white", "#1a202c");
+    return (
+        <Box >
 
-  return (
-  <Box bg="surface.card" p={4} borderRadius="xl" borderWidth="1px">
-  <Heading size="sm" mb={3}>
-    Case Status Distribution
-  </Heading>
+            <Box width="100%" height="210px">
+                {data.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                            data={data}
+                            margin={{
+                                top: 10,
+                                right: 20,
+                                left: 0,
+                                bottom: 10,
+                            }}
+                        >
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke={gridColor}
+                            />
 
-  <SimpleGrid columns={1}>
-    <Box display="flex" gap={4} height="100%">
-      <Box flex="2">
-        <ResponsiveContainer width="100%" height={210}>
-          <PieChart>
-            <Pie
-              data={data}
-              nameKey="status"
-              innerRadius={35}
-              outerRadius={80}
-            >
-              {data.map((entry, index) => (
-                <Cell
-                  key={entry.status}
-                  fill={palette[index % palette.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip
-              contentStyle={{
-                background: tooltipBg,
-                borderRadius: "8px",
-                borderColor: "transparent",
-              }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </Box>
+                            <XAxis
+                                dataKey="status"
+                                tick={{ fill: textColor, fontSize: 12 }}
+                                axisLine={{ stroke: gridColor }}
+                                tickLine={false}
+                            />
 
-      {/* Legend (1/3 width) */}
-      <Box flex="1" display="flex" alignItems="center" justifyContent="flex-start">
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {data.map((entry, index) => (
-            <li
-              key={entry.status}
-              style={{
-                marginBottom: 6,
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <span
-                style={{
-                  width: 14,
-                  height: 14,
-                  backgroundColor: palette[index % palette.length],
-                  display: "inline-block",
-                  borderRadius: 4,
-                  marginRight: 6,
-                }}
-              />
-              {entry.status}
-            </li>
-          ))}
-        </ul>
-      </Box>
-    </Box>
-  </SimpleGrid>
-</Box>
+                            <YAxis
+                                allowDecimals={false}
+                                tick={{ fill: textColor, fontSize: 12 }}
+                                axisLine={{ stroke: gridColor }}
+                                tickLine={false}
+                            />
 
-  );
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: tooltipBg,
+                                    borderRadius: "8px",
+                                    border: `1px solid ${gridColor}`,
+                                }}
+                                formatter={(value) => [
+                                    value,
+                                    "Cases",
+                                ]}
+                            />
+
+                            <Line
+                                type="monotone"
+                                dataKey="value"
+                                stroke="#00843D"
+                                strokeWidth={3}
+                                dot={{
+                                    r: 5,
+                                    strokeWidth: 2,
+                                }}
+                                activeDot={{
+                                    r: 7,
+                                }}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <Box
+                        height="100%"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                    >
+                        No case data available
+                    </Box>
+                )}
+            </Box>
+        </Box>
+    );
 };
 
 export default CaseStatusChart;

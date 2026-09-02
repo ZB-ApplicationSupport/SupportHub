@@ -1,113 +1,95 @@
 import React, { useEffect, useState } from "react";
-import { Box, Heading, SimpleGrid, Stack, Text } from "@chakra-ui/react";
+import {
+    Box,
+    Heading,
+    SimpleGrid,
+    Stack,
+    Text,
+    useColorModeValue,
+} from "@chakra-ui/react";
+
 import { useAppContext } from "../../context/AppContext";
 import { getCases } from "../../API/cases.api";
+
 import DashboardOverview from "./DashboardOverview";
 import CasesBySystemChart from "../../components/charts/CasesBySystemChart";
 
 const buildCasesBySystem = (items) => {
-  const map = (items || []).reduce((acc, item) => {
-    const sys = item.system || "Other";
-    acc[sys] = (acc[sys] || 0) + 1;
-    return acc;
-  }, {});
-  return Object.keys(map).map((key) => ({ system: key, cases: map[key] }));
+    const map = (items || []).reduce((acc, item) => {
+        const system = item.system || "Other";
+
+        acc[system] = (acc[system] || 0) + 1;
+
+        return acc;
+    }, {});
+
+    return Object.keys(map).map((system) => ({
+        system,
+        cases: map[system],
+    }));
 };
 
 const buildRecentActivity = (items) => {
     return [...(items || [])]
-        .sort((a, b) => new Date(b.lastUpdatedAt || b.createdAt || 0) - new Date(a.lastUpdatedAt || a.createdAt || 0))
+        .sort(
+            (a, b) =>
+                new Date(
+                    b.lastUpdatedAt || b.createdAt || 0
+                ) -
+                new Date(
+                    a.lastUpdatedAt || a.createdAt || 0
+                )
+        )
         .slice(0, 5)
         .map((item) => ({
             id: item.id,
             caseId: item.caseId ?? item.id,
-            summary: item.summary || item.title || "Case updated",
-            updatedBy: item.createdByEmail || "Unknown",
+            summary:
+                item.summary ||
+                item.title ||
+                "Case updated",
+            updatedBy:
+                item.createdByEmail ||
+                item.updatedByEmail ||
+                "Unknown",
         }));
 };
 
 const DashboardPage = () => {
-  const { user } = useAppContext();
-  const [cases, setCases] = useState([]);
+    const { user } = useAppContext();
+    const [cases, setCases] = useState([]);
 
-  useEffect(() => {
-    getCases()
-      .then(setCases)
-      .catch(() => setCases([]));
-  }, []);
+    const cardBg = useColorModeValue(
+        "surface.card",
+        "gray.800"
+    );
 
-  const systemData = buildCasesBySystem(cases);
+    useEffect(() => {
+        getCases()
+            .then(setCases)
+            .catch(() => setCases([]));
+    }, []);
+
+    const systemData = buildCasesBySystem(cases);
     const recentActivity = buildRecentActivity(cases);
 
+    return (
+        <Stack spacing={6} width="100%">
+            {/* Welcome */}
+            <Box>
+                <Heading size="lg">
+                    Welcome back,{" "}
+                    {user?.name
+                        ? user.name.split(" ")[0]
+                        : "there"}
+                </Heading>
+            </Box>
 
-  const roleWidgets = {
-    ADMIN: [
-      {
-        title: "Service Level Health",
-        description: "98.2% of cases within SLA thresholds.",
-      },
-      {
-        title: "Escalation Coverage",
-        description: "All escalated cases assigned to senior agents.",
-      },
-    ],
-    USER: [
-      {
-        title: "My Workload",
-        description: "4 open cases assigned to you today.",
-      },
-      {
-        title: "Next Shift Handoff",
-        description: "Prepare summary for 2 pending cases.",
-      },
-    ],
-  };
+            {/* Statistics + Status Chart */}
+            <DashboardOverview cases={cases} />
 
-  return (
-    <Stack spacing={6}>
-      <Box>
-        <Heading size="lg">
-          Welcome back, {user?.name ? user.name.split(" ")[0] : "there"}
-        </Heading>
-      </Box>
-
-        <DashboardOverview cases={cases} />
-
-      <SimpleGrid
-        gridTemplateColumns="3fr 1fr"
-        spacing={4}
-        mb={6}
-      >
-        <Box>
-          <CasesBySystemChart data={systemData} />
-        </Box>
-
-         <Box bg="surface.card" p={6} borderRadius="xl" borderWidth="1px">
-            <Heading size="sm" mb={4}>
-              Recent Activity
-            </Heading>
-            <Stack spacing={3}>
-              {recentActivity.map((item) => (
-                <Box key={item.id}>
-                  <Text fontWeight="500">
-                    {item.caseId} 
-                  </Text>
-                  <Text fontSize="xs" color="text.muted">
-                  {item.summary}  · {item.updatedBy}
-                  </Text>
-                </Box>
-              ))}
-            </Stack>
-          </Box>
-      </SimpleGrid>
-
-      <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={6}>
-        
-      </SimpleGrid>
-
-     
-    </Stack>
-  );
+        </Stack>
+    );
 };
 
 export default DashboardPage;

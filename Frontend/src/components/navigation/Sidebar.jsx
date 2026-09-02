@@ -1,91 +1,107 @@
 import React from "react";
-import {
-  Box,
-  Drawer,
-  DrawerContent,
-  DrawerOverlay,
-  Flex,
-  Heading,
-  IconButton,
-  Stack,
-  Text,
-  useBreakpointValue,
-  useColorModeValue
-} from "@chakra-ui/react";
-import { CloseIcon } from "@chakra-ui/icons";
-import { NAV_ITEMS } from "../../utils/constants";
+
+import Drawer from "@mui/material/Drawer";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+import Stack from "@mui/material/Stack";
+import Avatar from "@mui/material/Avatar";
+import Typography from "@mui/material/Typography";
+
 import { useAppContext } from "../../context/AppContext";
+
 import NavItem from "./NavItem";
+import UserMenu from "./UserMenu";
+
 import logo from "../../Assets/logoWhite.png";
 
-const SidebarContent = ({ onClose }) => {
-  const { user } = useAppContext();
-  const items = NAV_ITEMS.filter((item) => item.roles.includes(user.role));
+const drawerWidth = 240;
 
-  const bg = useColorModeValue("brand.600", "slate.900");
-  const borderColor = useColorModeValue("brand.700", "slate.700");
+const Sidebar = () => {
+    const { user } = useAppContext();
 
-  return (
-    <Box
-      bg={bg}
-      w={{ base: "full", lg: 64 }}
-      borderRightWidth={{ base: 0, lg: "1px" }}
-      borderColor={borderColor}
-      h="100dvh"
-      px={6}
-      py={6}
-      overflowY="auto"
-      position="sticky"
-      top={0}
-    >
-      <Flex align="center" justify="space-between" mb={8}>
-        <img
-          src={logo}
-          alt="ZB Logo"
-          style={{ height: "100px" }}
-        />
+    return (
+        <Drawer
+            variant="permanent"
+            sx={{
+                display: {
+                    xs: "none",
+                    md: "block",
+                },
 
-        {onClose && (
-          <IconButton
-            aria-label="Close navigation"
-            icon={<CloseIcon />}
-            size="sm"
-            variant="ghost"
-            display={{ base: "inline-flex", lg: "none" }}
-            onClick={onClose}
-          />
-        )}
-      </Flex>
+                width: drawerWidth,
+                flexShrink: 0,
 
-      <Stack spacing={2} flex="1">
-        {items.map((item) => (
-          <NavItem key={item.path} item={item} />
-        ))}
-      </Stack>
+                "& .MuiDrawer-paper": {
+                    width: drawerWidth,
+                    boxSizing: "border-box",
 
-      <Box mt={6}>
-      </Box>
-    </Box>
-  );
-};
+                    backgroundColor: "#263238",
+                    color: "#FFFFFF",
 
+                    borderRight: "none",
 
+                    backgroundImage:
+                        "linear-gradient(180deg, #263238 0%, #1F292D 100%)",
+                },
+            }}
+        >
+            {/* Logo */}
+            <Box
+                sx={{
+                    height: 100,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    px: 2,
+                }}
+            >
+                <Box
+                    component="img"
+                    src={logo}
+                    alt="ZB Bank"
+                    sx={{
+                        width: 150,
+                        height: "auto",
+                    }}
+                />
+            </Box>
 
-const Sidebar = ({ isOpen, onClose }) => {
-  const isDesktop = useBreakpointValue({ base: false, lg: true });
+            <Divider
+                sx={{
+                    borderColor: "rgba(255,255,255,0.12)",
+                }}
+            />
 
-  if (isDesktop) {
-    return <SidebarContent />;
-  }
+            {/* Navigation */}
+            <Stack
+                spacing={0.5}
+                sx={{
+                    flexGrow: 1,
+                    p: 1.5,
+                }}
+            >
+                <NavItem />
+            </Stack>
 
-  return (
-    <Drawer isOpen={isOpen} placement="left" onClose={onClose} size="xs">
-      <DrawerOverlay />
-      <DrawerContent>
-        <SidebarContent onClose={onClose} />
-      </DrawerContent>
-    </Drawer>
-  );
+            <Divider
+                sx={{
+                    borderColor: "rgba(255,255,255,0.12)",
+                }}
+            />
+
+            {/* User */}
+            <Stack
+                direction="row"
+                alignItems="center"
+                spacing={1.5}
+                sx={{
+                    p: 1.5,
+                }}
+            >
+                <UserMenu />
+            </Stack>
+        </Drawer>
+    );
 };
 
 export default Sidebar;

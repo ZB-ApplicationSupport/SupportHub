@@ -1,55 +1,116 @@
 import React from "react";
-import {
-  Badge,
-  Box,
-  Flex,
-  IconButton,
-  Stack,
-  Text,
-  useColorModeValue,
-} from "@chakra-ui/react";
-import { HamburgerIcon } from "@chakra-ui/icons";
-import ColorModeToggle from "../common/ColorModeToggle";
+
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import IconButton from "@mui/material/IconButton";
+
+import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
+import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
+
 import UserMenu from "./UserMenu";
-import { useAppContext } from "../../context/AppContext";
 
-const TopNav = ({ onOpen }) => {
-  const { user } = useAppContext();
-  const bg = useColorModeValue("surface.bg", "slate.900");
+const TopNav = () => {
+    return (
+        <AppBar
+            position="sticky"
+            elevation={0}
+            sx={{
+                backgroundColor: "#FFFFFF",
+                color: "#263238",
+                backgroundImage: "none",
 
-  return (
-    <Flex
-      align="center"
-      justify="space-between"
-      px={{ base: 4, md: 8 }}
-      py={4}
-      bg={bg}
-      position="sticky"
-      top={0}                 
-      zIndex={10}   
-      boxShadow="sm"          
-    >
-      <Flex align="center" gap={3}>
-        <IconButton
-          aria-label="Open navigation"
-          icon={<HamburgerIcon />}
-          variant="ghost"
-          display={{ base: "inline-flex", lg: "none" }}
-          onClick={onOpen}
-        />
-        <Box />
-      </Flex>
+                borderBottom: "1px solid",
+                borderColor: "#E1E7E3",
+            }}
+        >
+            <Toolbar
+                sx={{
+                    minHeight: "68px !important",
+                    px: {
+                        xs: 2,
+                        md: 3,
+                    },
+                }}
+            >
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    sx={{
+                        width: "100%",
+                    }}
+                >
+                    {/* LEFT */}
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={1.5}
+                    >
+                        <IconButton
+                            sx={{
+                                display: {
+                                    xs: "flex",
+                                    md: "none",
+                                },
+                            }}
+                        >
+                            <MenuRoundedIcon />
+                        </IconButton>
 
-      <Stack direction="row" align="center" spacing={4}>
-        <Badge colorScheme="secondary" variant="subtle">
-          {user.department}
-        </Badge>
-        <ColorModeToggle />
-        <UserMenu />
-      </Stack>
-    </Flex>
+                        <Box>
+                            <Typography
+                                variant="subtitle1"
+                                sx={{
+                                    fontWeight: 700,
+                                    lineHeight: 1.2,
+                                }}
+                            >
+                                Banking Systems Support
+                            </Typography>
 
-  );
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    color: "text.secondary",
+                                }}
+                            >
+                                ZB Financial Holdings
+                            </Typography>
+                        </Box>
+                    </Stack>
+
+                    {/* RIGHT */}
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={1}
+                        sx={{
+                            ml: "auto",
+                        }}
+                    >
+                        <IconButton
+                            aria-label="Notifications"
+                            sx={{
+                                color: "text.secondary",
+
+                                "&:hover": {
+                                    color: "primary.main",
+                                    backgroundColor: "#E8F5EE",
+                                },
+                            }}
+                        >
+                            <NotificationsRoundedIcon />
+                        </IconButton>
+
+                        <UserMenu />
+                    </Stack>
+                </Stack>
+            </Toolbar>
+        </AppBar>
+    );
 };
 
 export default TopNav;
