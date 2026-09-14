@@ -1,39 +1,56 @@
-import React, { useState } from "react";
-import {
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalHeader,
-  ModalOverlay,
-  Stack,
-  Text,
-  useToast,
-} from "@chakra-ui/react";
+import React, { useEffect, useState } from "react";
+import { SimpleGrid, Stack, useToast } from "@chakra-ui/react";
 
-const PasswordModal = ({ isOpen, onClose, onSave }) => {
+import {
+  AppModal,
+  FieldGroup,
+  FieldInput,
+  FieldTextarea,
+  ModalCancelButton,
+  ModalPrimaryButton,
+} from "../../../components/ui";
+
+const PASSWORD_FORM_ID = "add-password-form";
+
+const PasswordModal = ({ isOpen, onClose, onSave, initialValues }) => {
   const toast = useToast();
+  const isEdit = Boolean(initialValues?.id);
   const [formState, setFormState] = useState({
-    server: "",
+    systemName: "",
     username: "",
     password: "",
-    hostname: "",
+    description: "",
   });
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    setFormState({
+      systemName: initialValues?.systemName || "",
+      username: initialValues?.username || "",
+      password: "",
+      description: initialValues?.description || "",
+    });
+  }, [isOpen, initialValues]);
+
   const handleChange = (event) => {
-    setFormState((prev) => ({ ...prev, [event.target.name]: event.target.value }));
+    setFormState((prev) => ({
+      ...prev,
+      [event.target.name]: event.target.value,
+    }));
+  };
+
+  const handleClose = () => {
+    onClose();
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (!formState.server || !formState.username || !formState.password || !formState.hostname) {
+    if (!formState.systemName || !formState.username || !formState.password) {
       toast({
         title: "Missing fields",
-        description: "Fill in all fields before saving.",
+        description: "System, username, and password are required.",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -41,80 +58,67 @@ const PasswordModal = ({ isOpen, onClose, onSave }) => {
       return;
     }
     onSave(formState);
-    setFormState({ server: "", username: "", password: "", hostname: "" });
-  };
-
-  const handleClose = () => {
-    setFormState({ server: "", username: "", password: "", hostname: "" });
-    onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="lg">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>
-          <Stack spacing={1}>
-            <Text fontWeight="700">Add Password</Text>
-            <Text fontSize="sm" color="text.muted">
-              Save access details for shared systems.
-            </Text>
-          </Stack>
-        </ModalHeader>
-        <ModalCloseButton />
-        <ModalBody pb={6}>
-          <form onSubmit={handleSubmit}>
-            <Stack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>Server</FormLabel>
-                <Input
-                  name="server"
-                  placeholder="e.g. Core Banking"
-                  value={formState.server}
-                  onChange={handleChange}
-                />
-              </FormControl>
-              <FormControl isRequired>
-                <FormLabel>Username</FormLabel>
-                <Input
-                  name="username"
-                  placeholder="e.g. cb.admin"
-                  value={formState.username}
-                  onChange={handleChange}
-                />
-              </FormControl>
-              <FormControl isRequired>
-                <FormLabel>Password</FormLabel>
-                <Input
-                  name="password"
-                  type="text"
-                  placeholder="Enter password"
-                  value={formState.password}
-                  onChange={handleChange}
-                />
-              </FormControl>
-              <FormControl isRequired>
-                <FormLabel>Hostname</FormLabel>
-                <Input
-                  name="hostname"
-                  placeholder="e.g. corebanking.zb.co.zw"
-                  value={formState.hostname}
-                  onChange={handleChange}
-                />
-              </FormControl>
-              <Stack direction="row" justify="flex-end">
-                <Button variant="ghost" onClick={handleClose}>
-                  Cancel
-                </Button>
-                <Button colorScheme="brand" type="submit">
-                  Save Password
-                </Button>
-              </Stack>
-            </Stack>
-          </form>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+    <AppModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={isEdit ? "Update credential" : "Add credential"}
+      subtitle="Stored in BSS with systemName, username, password, and description."
+      compact
+      footer={
+        <>
+          <ModalCancelButton onClick={handleClose}>Cancel</ModalCancelButton>
+          <ModalPrimaryButton type="submit" form={PASSWORD_FORM_ID}>
+            {isEdit ? "Update" : "Save"}
+          </ModalPrimaryButton>
+        </>
+      }
+    >
+      <form id={PASSWORD_FORM_ID} onSubmit={handleSubmit}>
+        <Stack spacing={5}>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            <FieldGroup label="System name">
+              <FieldInput
+                name="systemName"
+                required
+                placeholder="e.g. core-banking-db"
+                value={formState.systemName}
+                onChange={handleChange}
+              />
+            </FieldGroup>
+            <FieldGroup label="Username">
+              <FieldInput
+                name="username"
+                required
+                placeholder="e.g. admin_user"
+                value={formState.username}
+                onChange={handleChange}
+              />
+            </FieldGroup>
+          </SimpleGrid>
+          <FieldGroup label="Password">
+            <FieldInput
+              name="password"
+              required
+              type="password"
+              placeholder={isEdit ? "Enter the new password" : "Enter password"}
+              value={formState.password}
+              onChange={handleChange}
+            />
+          </FieldGroup>
+          <FieldGroup label="Description" tall>
+            <FieldTextarea
+              name="description"
+              placeholder="Where this credential is used"
+              value={formState.description}
+              onChange={handleChange}
+            />
+          </FieldGroup>
+        </Stack>
+      </form>
+    </AppModal>
   );
 };
 

@@ -8,23 +8,21 @@ import {
   FormErrorMessage,
   FormLabel,
   Input,
-  Box,
-  Center,
-  Heading,
   Stack,
   Text,
-  useColorModeValue
 } from "@chakra-ui/react";
-import logo from '../../../assets/logos/logo.png';
 import { useNavigate } from "react-router-dom";
 import { requestSignup } from "../signupRequests.api";
+import AuthSplitLayout from "./AuthSplitLayout";
+import {
+  AUTH_BUTTON_PROPS,
+  AUTH_INPUT_PROPS,
+  AUTH_LABEL_PROPS,
+  AUTH_LINK_PROPS,
+} from "./authFormStyles";
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const pageBg = useColorModeValue("gray.100", "slate.900");
-  const cardBg = useColorModeValue("white", "slate.800");
-  const headingColor = useColorModeValue("gray.700", "white");
-  const labelColor = useColorModeValue("gray.700", "gray.200");
 
   const [formState, setFormState] = useState({
     email: "",
@@ -53,11 +51,8 @@ const SignUp = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    // Mark all fields as touched
     setTouched({ email: true, password: true, confirmPassword: true });
 
-    // Basic validation
     if (!formState.email || !formState.password || !formState.confirmPassword) {
       setStatus("error");
       return;
@@ -73,7 +68,6 @@ const SignUp = () => {
       return;
     }
 
-    // Optional: email format check
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formState.email.trim())) {
       setStatus("invalidEmail");
@@ -87,12 +81,8 @@ const SignUp = () => {
         password: formState.password,
       });
       setStatus("success");
-
-      // Reset form and touched
       setFormState({ email: "", password: "", confirmPassword: "" });
       setTouched({ email: false, password: false, confirmPassword: false });
-
-      // Redirect after short delay
       setTimeout(() => navigate("/"), 800);
     } catch (error) {
       const message =
@@ -106,10 +96,17 @@ const SignUp = () => {
   };
 
   const emailError = touched.email && !formState.email;
-  const emailFormatError = touched.email && formState.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.email);
+  const emailFormatError =
+    touched.email &&
+    formState.email &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.email);
   const passwordError = touched.password && !formState.password;
   const confirmPasswordError = touched.confirmPassword && !formState.confirmPassword;
-  const passwordMismatch = touched.confirmPassword && formState.password && formState.confirmPassword && formState.password !== formState.confirmPassword;
+  const passwordMismatch =
+    touched.confirmPassword &&
+    formState.password &&
+    formState.confirmPassword &&
+    formState.password !== formState.confirmPassword;
 
   const isFormInvalid =
     !formState.email ||
@@ -119,145 +116,134 @@ const SignUp = () => {
     emailFormatError;
 
   return (
-    <Box>
-      <Center minH="100vh" bg={pageBg} p={4} flexDirection="column">
-        <Box>
-          <img src={logo} alt="ZB Logo" style={{ width: '100px', height: '100px', margin: "0 auto 20px auto" }} />
-          <Heading as="h1" size="2xl" mb={50} color={headingColor}>
-            ZB Support Hub
-          </Heading>
-        </Box>
+    <AuthSplitLayout
+      title="Request an account"
+      subtitle="Submit a signup request. You will be notified once it is approved."
+    >
+      <form onSubmit={handleSubmit} aria-label="Signup form" autoComplete="off">
+        <Stack spacing={5}>
+          <FormControl isInvalid={emailError || emailFormatError} isRequired>
+            <FormLabel {...AUTH_LABEL_PROPS}>Email</FormLabel>
+            <Input
+              name="email"
+              type="email"
+              placeholder="Enter your email"
+              value={formState.email}
+              onChange={handleChange}
+              onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
+              autoComplete="email"
+              {...AUTH_INPUT_PROPS}
+            />
+            <FormErrorMessage>
+              {emailError
+                ? "Email is required."
+                : emailFormatError
+                ? "Invalid email format."
+                : ""}
+            </FormErrorMessage>
+          </FormControl>
 
-        <Box
-          maxW="md"
-          w="full"
-          bg={cardBg}
-          p={8}
-          borderRadius="lg"
-          boxShadow="lg"
-        >
-          <Heading as="h2" size="lg" textAlign="center" mb={6} color={headingColor}>
-            Sign Up Request
-          </Heading>
+          <FormControl isInvalid={passwordError} isRequired>
+            <FormLabel {...AUTH_LABEL_PROPS}>Password</FormLabel>
+            <Input
+              name="password"
+              type="password"
+              placeholder="Enter your password"
+              value={formState.password}
+              onChange={handleChange}
+              onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
+              autoComplete="new-password"
+              {...AUTH_INPUT_PROPS}
+            />
+            <FormErrorMessage>Password is required.</FormErrorMessage>
+          </FormControl>
 
-          <form onSubmit={handleSubmit} aria-label="Signup form" autoComplete="off">
-            <Stack spacing={4}>
-              <FormControl isInvalid={emailError || emailFormatError} isRequired>
-                <FormLabel color={labelColor}>Email</FormLabel>
-                <Input
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={formState.email}
-                  onChange={handleChange}
-                  onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
-                  autoComplete="email"
-                />
-                <FormErrorMessage>
-                  {emailError ? "Email is required." : emailFormatError ? "Invalid email format." : ""}
-                </FormErrorMessage>
-              </FormControl>
+          <FormControl isInvalid={confirmPasswordError || passwordMismatch} isRequired>
+            <FormLabel {...AUTH_LABEL_PROPS}>Confirm password</FormLabel>
+            <Input
+              name="confirmPassword"
+              type="password"
+              placeholder="Confirm your password"
+              value={formState.confirmPassword}
+              onChange={handleChange}
+              onBlur={() =>
+                setTouched((prev) => ({ ...prev, confirmPassword: true }))
+              }
+              autoComplete="new-password"
+              {...AUTH_INPUT_PROPS}
+            />
+            <FormErrorMessage>
+              {confirmPasswordError
+                ? "Password confirmation is required."
+                : passwordMismatch
+                ? "Passwords do not match."
+                : ""}
+            </FormErrorMessage>
+          </FormControl>
 
-              <FormControl isInvalid={passwordError} isRequired>
-                <FormLabel>Password</FormLabel>
-                <Input
-                  name="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={formState.password}
-                  onChange={handleChange}
-                  onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
-                  autoComplete="new-password"
-                />
-                <FormErrorMessage>Password is required.</FormErrorMessage>
-              </FormControl>
+          {status === "error" && (
+            <Alert status="error" borderRadius="12px" aria-live="polite">
+              <AlertIcon />
+              <AlertDescription>
+                {errorMessage || "Please fill out all fields."}
+              </AlertDescription>
+            </Alert>
+          )}
 
-              <FormControl isInvalid={confirmPasswordError || passwordMismatch} isRequired>
-                <FormLabel>Confirm Password</FormLabel>
-                <Input
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={formState.confirmPassword}
-                  onChange={handleChange}
-                  onBlur={() => setTouched(prev => ({ ...prev, confirmPassword: true }))}
-                  autoComplete="new-password"
-                />
-                <FormErrorMessage>
-                  {confirmPasswordError
-                    ? "Password confirmation is required."
-                    : passwordMismatch
-                    ? "Passwords do not match."
-                    : ""}
-                </FormErrorMessage>
-              </FormControl>
+          {status === "shortPassword" && (
+            <Alert status="error" borderRadius="12px" aria-live="polite">
+              <AlertIcon />
+              <AlertDescription>
+                Password must be at least 8 characters long.
+              </AlertDescription>
+            </Alert>
+          )}
 
-              <Text fontSize="sm" color={labelColor} textAlign="center">
-                Already have an account?{" "}
-                <Text
-                  as="span"
-                  color="blue.500"
-                  fontWeight="600"
-                  cursor="pointer"
-                  onClick={() => navigate("/")}
-                >
-                  Login
-                </Text>
-              </Text>
+          {status === "mismatch" && (
+            <Alert status="error" borderRadius="12px" aria-live="polite">
+              <AlertIcon />
+              <AlertDescription>
+                Passwords do not match. Please confirm again.
+              </AlertDescription>
+            </Alert>
+          )}
 
-              {status === "error" && (
-                <Alert status="error" borderRadius="md" aria-live="polite">
-                  <AlertIcon />
-                  <AlertDescription>{errorMessage || "Please fill out all fields."}</AlertDescription>
-                </Alert>
-              )}
+          {status === "invalidEmail" && (
+            <Alert status="error" borderRadius="12px" aria-live="polite">
+              <AlertIcon />
+              <AlertDescription>Invalid email format.</AlertDescription>
+            </Alert>
+          )}
 
-              {status === "shortPassword" && (
-                <Alert status="error" borderRadius="md" aria-live="polite">
-                  <AlertIcon />
-                  <AlertDescription>Password must be at least 8 characters long.</AlertDescription>
-                </Alert>
-              )}
+          {status === "success" && (
+            <Alert status="success" borderRadius="12px" aria-live="polite">
+              <AlertIcon />
+              <AlertDescription>
+                Request submitted successfully. You will receive an email once your account is approved.
+              </AlertDescription>
+            </Alert>
+          )}
 
-              {status === "mismatch" && (
-                <Alert status="error" borderRadius="md" aria-live="polite">
-                  <AlertIcon />
-                  <AlertDescription>Passwords do not match. Please confirm again.</AlertDescription>
-                </Alert>
-              )}
+          <Button
+            type="submit"
+            width="full"
+            isLoading={status === "submitting"}
+            loadingText="Sending..."
+            isDisabled={isFormInvalid || status === "submitting"}
+            {...AUTH_BUTTON_PROPS}
+          >
+            Send request
+          </Button>
 
-              {status === "invalidEmail" && (
-                <Alert status="error" borderRadius="md" aria-live="polite">
-                  <AlertIcon />
-                  <AlertDescription>Invalid email format.</AlertDescription>
-                </Alert>
-              )}
-
-              {status === "success" && (
-                <Alert status="success" borderRadius="md" aria-live="polite">
-                  <AlertIcon />
-                  <AlertDescription>
-                    Request submitted successfully. You will receive an email once your account is approved.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <Button
-                type="submit"
-                size="lg"
-                width="full"
-                colorScheme="brand"
-                isLoading={status === "submitting"}
-                loadingText="Sending..."
-                isDisabled={isFormInvalid || status === "submitting"}
-              >
-                Send Request
-              </Button>
-            </Stack>
-          </form>
-        </Box>
-      </Center>
-    </Box>
+          <Text fontSize="sm" color="text.muted" textAlign="center">
+            Already have an account?{" "}
+            <Text as="span" {...AUTH_LINK_PROPS} onClick={() => navigate("/")}>
+              Login
+            </Text>
+          </Text>
+        </Stack>
+      </form>
+    </AuthSplitLayout>
   );
 };
 

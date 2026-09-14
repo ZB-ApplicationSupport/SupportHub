@@ -1,13 +1,13 @@
 import React from "react";
-import { Badge } from "@chakra-ui/react";
+import { StatusDot } from "../../../components/ui";
 
-const roleColors = {
-  ADMIN: "purple",
-  USER: "blue",
+const ROLE_COLORS = {
+  ADMIN: "#00843D",
+  USER: "#F4B41A",
 };
 
-const RoleBadge = ({ role }) => {
-  return <Badge colorScheme={roleColors[role] || "gray"}>{role}</Badge>;
-};
+const RoleBadge = ({ role }) => (
+  <StatusDot color={ROLE_COLORS[role] || "#6B7280"} label={role || "USER"} />
+);
 
 export default RoleBadge;

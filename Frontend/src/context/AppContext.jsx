@@ -34,6 +34,7 @@ export const AppProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("case-tracker-user");
     setUser(null);
   };

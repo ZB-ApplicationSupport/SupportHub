@@ -1,25 +1,47 @@
 import React from "react";
 import {
-  Box,
+  Button,
+  HStack,
   Table,
   TableContainer,
   Tbody,
   Td,
+  Text,
   Th,
   Thead,
   Tr,
-  Text,
-  useToast,
 } from "@chakra-ui/react";
+import { useToast } from "@chakra-ui/react";
+import { DataTableShell, TableSearch } from "../../../components/ui";
+import { formatCaseOpenedAt } from "../../cases/case.utils";
 
-const PasswordsTable = ({ items }) => {
+const headerProps = {
+  fontSize: "xs",
+  fontWeight: "700",
+  letterSpacing: "0.02em",
+  color: "text.muted",
+};
+
+const PasswordsTable = ({
+  items = [],
+  query = "",
+  onQueryChange,
+  revealed = {},
+  onReveal,
+  onHide,
+  onCopy,
+  onHistory,
+  onEdit,
+  onDelete,
+  isAdmin = false,
+}) => {
   const toast = useToast();
 
-  const copyPassword = async (value) => {
+  const copyValue = async (value) => {
     if (!value) {
       toast({
         title: "Nothing to copy",
-        description: "This password field is empty.",
+        description: "Reveal the password first.",
         status: "warning",
         duration: 2000,
         isClosable: true,
@@ -43,15 +65,14 @@ const PasswordsTable = ({ items }) => {
       }
       toast({
         title: "Password copied",
-        description: "Copied to clipboard.",
         status: "success",
         duration: 2000,
         isClosable: true,
       });
+      onCopy?.(value);
     } catch (error) {
       toast({
         title: "Copy failed",
-        description: "Unable to copy the password.",
         status: "error",
         duration: 2000,
         isClosable: true,
@@ -60,54 +81,131 @@ const PasswordsTable = ({ items }) => {
   };
 
   return (
-    <Box bg="surface.card" borderRadius="xl" borderWidth="1px">
-      <TableContainer>
-        <Table variant="simple">
-          <Thead>
+    <DataTableShell>
+      <HStack
+        w="100%"
+        justify="space-between"
+        align="center"
+        px={5}
+        py={4}
+        borderBottomWidth="1px"
+        borderColor="border.default"
+      >
+        <TableSearch
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder="Search by system or username..."
+        />
+      </HStack>
+
+      <TableContainer w="100%" overflowX="auto">
+        <Table variant="simple" size="sm" w="100%">
+          <Thead bg="surface.card">
             <Tr>
-              <Th>Hostname</Th>
-              <Th>Server IP</Th>
-              <Th>Username</Th>
-              <Th>Password</Th>
-              <Th>Date Added</Th>
-              <Th>Last Modified</Th>
-              <Th>Created By</Th>
-              <Th>Last Modified By</Th>
+              <Th {...headerProps}>System</Th>
+              <Th {...headerProps}>Username</Th>
+              <Th {...headerProps}>Description</Th>
+              <Th {...headerProps}>Password</Th>
+              <Th {...headerProps}>Updated</Th>
+              <Th {...headerProps}>Created by</Th>
+              <Th {...headerProps}>Actions</Th>
             </Tr>
           </Thead>
           <Tbody>
             {items.length === 0 ? (
               <Tr>
-                <Td colSpan={8}>
-                  <Text color="text.muted">No passwords saved yet.</Text>
+                <Td colSpan={7} py={12} textAlign="center">
+                  <Text fontSize="sm" color="text.muted">
+                    No credentials match this search.
+                  </Text>
                 </Td>
               </Tr>
             ) : (
-              items.map((item) => (
-                <Tr key={item.id}>
-                  <Td>{item.hostname}</Td>
-                  <Td>{item.server}</Td>
-                  <Td>{item.username}</Td>
-                  <Td
-                    cursor="pointer"
-                    color="brand.500"
-                    fontWeight="600"
-                    onClick={() => copyPassword(item.password)}
-                    _hover={{ textDecoration: "underline" }}
+              items.map((item) => {
+                const secret = revealed[item.id];
+                return (
+                  <Tr
+                    key={item.id}
+                    _hover={{ bg: "surface.subtle" }}
+                    transition="background 0.15s ease"
                   >
-                    {item.password}
-                  </Td>
-                  <Td>{item.createdAt}</Td>
-                  <Td>{item.updatedAt}</Td>
-                  <Td>{item.createdBy}</Td>
-                  <Td>{item.updatedBy}</Td>
-                </Tr>
-              ))
+                    <Td>
+                      <Text fontSize="sm" fontWeight="600">
+                        {item.systemName || "—"}
+                      </Text>
+                    </Td>
+                    <Td whiteSpace="nowrap">
+                      <Text fontSize="sm">{item.username || "—"}</Text>
+                    </Td>
+                    <Td>
+                      <Text fontSize="sm" noOfLines={1}>
+                        {item.description || "—"}
+                      </Text>
+                    </Td>
+                    <Td whiteSpace="nowrap">
+                      {secret ? (
+                        <Text
+                          fontSize="sm"
+                          fontWeight="600"
+                          color="text.brand"
+                          cursor="pointer"
+                          onClick={() => copyValue(secret)}
+                        >
+                          {secret}
+                        </Text>
+                      ) : (
+                        <Text fontSize="sm" color="text.muted">
+                          ••••••••
+                        </Text>
+                      )}
+                    </Td>
+                    <Td whiteSpace="nowrap">
+                      <Text fontSize="sm" color="text.muted">
+                        {formatCaseOpenedAt(item.updatedAt || item.createdAt)}
+                      </Text>
+                    </Td>
+                    <Td>
+                      <Text fontSize="sm">{item.createdBy || "—"}</Text>
+                    </Td>
+                    <Td>
+                      <HStack spacing={2}>
+                        {secret ? (
+                          <Button size="xs" variant="ghost" onClick={() => onHide?.(item)}>
+                            Hide
+                          </Button>
+                        ) : (
+                          <Button size="xs" variant="ghost" onClick={() => onReveal?.(item)}>
+                            Reveal
+                          </Button>
+                        )}
+                        <Button size="xs" variant="ghost" onClick={() => onHistory?.(item)}>
+                          History
+                        </Button>
+                        {isAdmin && (
+                          <>
+                            <Button size="xs" variant="ghost" onClick={() => onEdit?.(item)}>
+                              Edit
+                            </Button>
+                            <Button
+                              size="xs"
+                              variant="ghost"
+                              color="danger.onWash"
+                              onClick={() => onDelete?.(item)}
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
+                      </HStack>
+                    </Td>
+                  </Tr>
+                );
+              })
             )}
           </Tbody>
         </Table>
       </TableContainer>
-    </Box>
+    </DataTableShell>
   );
 };
 

@@ -1,3 +1,35 @@
+const parseCaseDate = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+export const formatCaseOpenedAt = (value) => {
+  const date = parseCaseDate(value);
+
+  if (!date) {
+    return value || "—";
+  }
+
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Africa/Harare",
+  });
+};
+
 export const filterCases = (
     cases,
     query,
@@ -49,7 +81,30 @@ export const filterCases = (
             .toLowerCase()
             .includes(searchTerm) ||
 
+        item.caseId
+            ?.toString()
+            .toLowerCase()
+            .includes(searchTerm) ||
+
+        item.caseNumber
+            ?.toString()
+            .toLowerCase()
+            .includes(searchTerm) ||
+
+        item.reference
+            ?.toString()
+            .toLowerCase()
+            .includes(searchTerm) ||
+
+        item.title
+            ?.toLowerCase()
+            .includes(searchTerm) ||
+
         item.summary
+            ?.toLowerCase()
+            .includes(searchTerm) ||
+
+        item.caseSummary
             ?.toLowerCase()
             .includes(searchTerm) ||
 

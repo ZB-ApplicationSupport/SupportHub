@@ -3,144 +3,140 @@ import {
   Alert,
   AlertDescription,
   AlertIcon,
-  Box,
   Button,
-  Center,
   FormControl,
   FormErrorMessage,
   FormLabel,
-  Heading,
   Input,
   Stack,
-  useColorModeValue,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import logo from "../../../assets/logos/logo.png";
-
+import AuthSplitLayout from "../components/AuthSplitLayout";
+import {
+  AUTH_BUTTON_PROPS,
+  AUTH_INPUT_PROPS,
+  AUTH_LABEL_PROPS,
+} from "../components/authFormStyles";
+import { resetPassword } from "../forgotPassword.api";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
-
-  const pageBg = useColorModeValue("gray.100", "slate.900");
-  const cardBg = useColorModeValue("white", "slate.800");
-  const headingColor = useColorModeValue("gray.700", "white");
-  const labelColor = useColorModeValue("gray.700", "gray.200");
-
-  const [email] = useState("lnyandoro@zb.co.zw"); // fixed, not editable
+  const params = new URLSearchParams(window.location.search);
+  const [email, setEmail] = useState(params.get("email") || "");
+  const [code, setCode] = useState(params.get("code") || "");
   const [newPassword, setNewPassword] = useState("");
   const [touched, setTouched] = useState(false);
   const [status, setStatus] = useState("idle");
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setTouched(true);
 
-    if (!newPassword) {
+    if (!email || !code || !newPassword) {
       setStatus("error");
       return;
     }
 
-    setStatus("success");
-    setTimeout(() => navigate("/"), 1200);
+    try {
+      setStatus("loading");
+      await resetPassword({ email, code, newPassword });
+      setStatus("success");
+      setTimeout(() => navigate("/"), 1200);
+    } catch (error) {
+      setStatus("error");
+    }
   };
 
+  const emailError = touched && !email;
+  const codeError = touched && !code;
   const passwordError = touched && !newPassword;
 
   return (
-    <Box>
-      <Center minH="100vh" bg={pageBg} p={4} flexDirection="column">
-        <Box textAlign="center">
-          <img
-            src={logo}
-            alt="ZB Logo"
-            style={{ width: "100px", height: "100px", marginBottom: "20px" }}
-          />
-          <Heading as="h1" size="2xl" mb={10} color={headingColor}>
-            ZB Support Hub
-          </Heading>
-        </Box>
+    <AuthSplitLayout
+      title="Reset password"
+      subtitle="Choose a new password for your SupportHub account."
+    >
+      <form onSubmit={handleSubmit} autoComplete="off">
+        <Stack spacing={5}>
+          <FormControl isInvalid={emailError} isRequired>
+            <FormLabel {...AUTH_LABEL_PROPS}>Email</FormLabel>
+            <Input
+              name="email"
+              type="email"
+              value={email}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                if (status !== "idle") setStatus("idle");
+              }}
+              onBlur={() => setTouched(true)}
+              autoComplete="email"
+              {...AUTH_INPUT_PROPS}
+            />
+            <FormErrorMessage>Email is required.</FormErrorMessage>
+          </FormControl>
 
-        <Box
-          maxW="md"
-          w="full"
-          bg={cardBg}
-          p={8}
-          borderRadius="lg"
-          boxShadow="lg"
-        >
-          <Heading
-            as="h2"
-            size="lg"
-            textAlign="center"
-            mb={6}
-            color={headingColor}
+          <FormControl isInvalid={codeError} isRequired>
+            <FormLabel {...AUTH_LABEL_PROPS}>Reset code</FormLabel>
+            <Input
+              name="code"
+              placeholder="Enter reset code"
+              value={code}
+              onChange={(event) => {
+                setCode(event.target.value);
+                if (status !== "idle") setStatus("idle");
+              }}
+              onBlur={() => setTouched(true)}
+              autoComplete="one-time-code"
+              {...AUTH_INPUT_PROPS}
+            />
+            <FormErrorMessage>Reset code is required.</FormErrorMessage>
+          </FormControl>
+
+          <FormControl isInvalid={passwordError} isRequired>
+            <FormLabel {...AUTH_LABEL_PROPS}>New password</FormLabel>
+            <Input
+              type="password"
+              name="newPassword"
+              placeholder="Enter your new password"
+              value={newPassword}
+              onChange={(event) => {
+                setNewPassword(event.target.value);
+                if (status !== "idle") setStatus("idle");
+              }}
+              onBlur={() => setTouched(true)}
+              autoComplete="new-password"
+              {...AUTH_INPUT_PROPS}
+            />
+            <FormErrorMessage>Password is required.</FormErrorMessage>
+          </FormControl>
+
+          {status === "error" && (
+            <Alert status="error" borderRadius="12px">
+              <AlertIcon />
+              <AlertDescription>Please enter your email, reset code, and new password.</AlertDescription>
+            </Alert>
+          )}
+
+          {status === "success" && (
+            <Alert status="success" borderRadius="12px">
+              <AlertIcon />
+              <AlertDescription>
+                Password has been reset successfully. Redirecting...
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Button
+            type="submit"
+            width="full"
+            isLoading={status === "loading"}
+            {...AUTH_BUTTON_PROPS}
           >
-            Reset Password
-          </Heading>
-
-          <form onSubmit={handleSubmit} autoComplete="off">
-            <Stack spacing={4}>
-              <FormControl >
-                <FormLabel color={labelColor}>Email</FormLabel>
-                <Input
-                  name="email"
-                  value={email}
-                  readOnly
-                  autoComplete="off"
-                />
-              </FormControl>
-
-              <FormControl isInvalid={passwordError} isRequired>
-                <FormLabel color={labelColor}>New Password</FormLabel>
-                <Input
-                  type="password"
-                  name="newPassword"
-                  placeholder="Enter your new password"
-                  value={newPassword}
-                  onChange={(event) => {
-                    setNewPassword(event.target.value);
-                    if (status !== "idle") setStatus("idle");
-                  }}
-                  onBlur={() => setTouched(true)}
-                  autoComplete="new-password"
-                />
-                <FormErrorMessage>
-                  Password is required.
-                </FormErrorMessage>
-              </FormControl>
-
-              {/* Alerts */}
-              {status === "error" && (
-                <Alert status="error" borderRadius="md">
-                  <AlertIcon />
-                  <AlertDescription>
-                    Please enter a new password.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {status === "success" && (
-                <Alert status="success" borderRadius="md">
-                  <AlertIcon />
-                  <AlertDescription>
-                    Password has been reset successfully. Redirecting...
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <Button
-                type="submit"
-                size="lg"
-                width="full"
-                colorScheme="brand"
-              >
-                Reset Password
-              </Button>
-            </Stack>
-          </form>
-        </Box>
-      </Center>
-    </Box>
+            Reset password
+          </Button>
+        </Stack>
+      </form>
+    </AuthSplitLayout>
   );
 };
 

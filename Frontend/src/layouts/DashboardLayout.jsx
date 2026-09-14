@@ -1,110 +1,29 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Navigate, Outlet } from "react-router-dom";
+import { useColorMode } from "@chakra-ui/react";
 
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 
 import { useAppContext } from "../context/AppContext";
+import { createAppMuiTheme } from "../theme/muiTheme";
+import { compactPx, useCompactDesktop } from "../utils/compactDesktop";
 
 import Sidebar from "../components/layout/Sidebar";
 import TopNav from "../components/layout/TopNav";
-
-const muiTheme = createTheme({
-  palette: {
-    mode: "light",
-
-    primary: {
-      main: "#00843D",
-      dark: "#006B32",
-      light: "#2E9B5B",
-      contrastText: "#FFFFFF",
-    },
-
-    secondary: {
-      main: "#263238",
-      dark: "#1F2933",
-      light: "#546E7A",
-      contrastText: "#FFFFFF",
-    },
-
-    background: {
-      default: "#F5F7F6",
-      paper: "#FFFFFF",
-    },
-
-    text: {
-      primary: "#263238",
-      secondary: "#6B7280",
-    },
-
-    divider: "#E1E7E3",
-  },
-
-  typography: {
-    fontFamily:
-      '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-
-    h1: {
-      fontWeight: 700,
-    },
-
-    h2: {
-      fontWeight: 700,
-    },
-
-    h3: {
-      fontWeight: 700,
-    },
-
-    h4: {
-      fontWeight: 700,
-    },
-
-    h5: {
-      fontWeight: 600,
-    },
-
-    h6: {
-      fontWeight: 600,
-    },
-  },
-
-  shape: {
-    borderRadius: 10,
-  },
-
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: "none",
-          fontWeight: 600,
-        },
-      },
-    },
-
-    MuiListItemButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-        },
-      },
-    },
-
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: "none",
-        },
-      },
-    },
-  },
-});
+import NotificationDrawer from "../components/layout/NotificationDrawer";
+import { NotificationDrawerProvider } from "../context/NotificationDrawerContext";
 
 const DashboardLayout = () => {
   const { user } = useAppContext();
   const token = localStorage.getItem("token");
+  const { colorMode } = useColorMode();
+  const compact = useCompactDesktop();
+  const muiTheme = useMemo(
+    () => createAppMuiTheme(colorMode),
+    [colorMode]
+  );
 
   if (!user || !token) {
     return <Navigate to="/" replace />;
@@ -113,53 +32,68 @@ const DashboardLayout = () => {
   return (
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
-
-      <Box
-        sx={{
-          display: "flex",
-          minHeight: "100vh",
-          backgroundColor: "background.default",
-        }}
-      >
-        {/* Sidebar */}
-        <Sidebar />
-
-        {/* Main application area */}
+      <NotificationDrawerProvider>
         <Box
-          component="main"
           sx={{
-            flexGrow: 1,
-            minWidth: 0,
-            width: "100%",
+            display: "flex",
+            height: "100vh",
+            overflow: "hidden",
+            backgroundColor: "background.default",
           }}
         >
-          {/* Top navigation */}
-          <TopNav />
+          <Sidebar />
 
-          {/* Page content */}
           <Box
+            component="main"
             sx={{
+              flexGrow: 1,
+              minWidth: 0,
               width: "100%",
-              maxWidth: "1700px",
-              mx: "auto",
-              px: {
-                xs: 2,
-                sm: 3,
-                md: 4,
-              },
-              py: {
-                xs: 2,
-                md: 3,
-              },
+              height: "100vh",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
-            <Outlet />
+            <TopNav />
+
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                width: "100%",
+                overflow: "auto",
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+                "&::-webkit-scrollbar": {
+                  display: "none",
+                  width: 0,
+                  height: 0,
+                },
+                display: "flex",
+                flexDirection: "column",
+                px: {
+                  xs: `${compactPx(16, compact)}px`,
+                  sm: `${compactPx(20, compact)}px`,
+                  md: `${compactPx(24, compact)}px`,
+                },
+                pt: {
+                  xs: "24px",
+                  md: "40px",
+                },
+                pb: {
+                  xs: `${compactPx(16, compact)}px`,
+                  md: `${compactPx(24, compact)}px`,
+                },
+              }}
+            >
+              <Outlet />
+            </Box>
           </Box>
         </Box>
-      </Box>
+        <NotificationDrawer />
+      </NotificationDrawerProvider>
     </ThemeProvider>
   );
 };
 
 export default DashboardLayout;
-

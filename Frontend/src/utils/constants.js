@@ -16,50 +16,55 @@ export const NAV_ITEMS = [
   },
 
   {
-    label: "Cases",
-    path: "/cases",
+    label: "Automations",
+    path: "/automations",
     roles: ["ADMIN", "USER"],
-    icon: "cases",
+    icon: "automations",
   },
+
+  // {
+  //   label: "Cases",
+  //   path: "/cases",
+  //   roles: ["ADMIN", "USER"],
+  //   icon: "cases",
+  // },
 
   {
     label: "Knowledge Base",
     path: "/knowledge",
     roles: ["ADMIN", "USER"],
+    icon: "knowledge",
   },
 
   {
     label: "Passwords",
     path: "/passwords",
     roles: ["ADMIN", "USER"],
-  },
-
-  {
-    label: "Supported Systems",
-    path: "/systems",
-    roles: ["ADMIN"],
-    icon: "systems",
-  },
-
-  {
-    label: "Users",
-    path: "/users",
-    roles: ["ADMIN"],
-    icon: "users",
+    icon: "passwords",
   },
 
   {
     label: "Reports",
     path: "/reports",
     roles: ["ADMIN", "USER"],
+    icon: "reports",
+  },
+
+  {
+    label: "Settings",
+    path: "/settings",
+    roles: ["ADMIN", "USER"],
+    icon: "settings",
   },
 ];
 
 export const STATUS_COLORS = {
-  "In progress": "blue",
-  "In UAT": "purple",
-  "Resolved": "green",
-  "Awaiting vendor": "orange",
+  Open: "yellow",
+  Closed: "green",
+  "In progress": "yellow",
+  "In UAT": "orange",
+  Resolved: "green",
+  "Awaiting vendor": "red",
 };
 
 export const PRIORITY_COLORS = {

@@ -1,50 +1,25 @@
 // src/API/users.api.js
 import api from "../../services/axios";
 
-// ============================================================
-// GET ALL USERS
-// ============================================================
+const usernameFromEmail = (email = "") => String(email).split("@")[0] || email;
 
-export const getUsers = async () => {
-  const response = await api.get("/admin/get/users");
-  return response.data;
+const mapUserWrite = (data = {}) => {
+  const username = data.username || usernameFromEmail(data.email);
+  return {
+    username,
+    email: data.email,
+    firstName: data.firstName || username,
+    lastName: data.lastName || "",
+    password: data.password || data.temporaryPassword,
+    role: data.role || "USER",
+  };
 };
-
-
-// ============================================================
-// GET ENABLED USERS FOR CASE ASSIGNMENT
-// ============================================================
-
-export const getAssignees = async () => {
-  const response = await api.get("/users/assignees");
-  return response.data;
-};
-
 
 // ============================================================
 // ADD USER
 // ============================================================
 
 export const addUser = async (data) => {
-  await api.post("/admin/add/users", {
-    email: data.email,
-    temporaryPassword: data.temporaryPassword,
-    role: data.role || "USER",
-  });
+  await api.post("/users", mapUserWrite(data));
 };
 
-
-// ============================================================
-// TOGGLE USER STATUS
-// ============================================================
-
-export const toggleUserStatus = async (userId, enable) => {
-  const response = await api.put(
-      `/admin/users/${userId}/status`,
-      {
-        enabled: enable,
-      }
-  );
-
-  return response.data;
-};

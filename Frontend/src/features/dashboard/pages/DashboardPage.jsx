@@ -1,94 +1,80 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { Box, useDisclosure } from "@chakra-ui/react";
+import { FiPlus } from "react-icons/fi";
+
 import {
-    Box,
-    Heading,
-    SimpleGrid,
-    Stack,
-    Text,
-    useColorModeValue,
-} from "@chakra-ui/react";
-
-import { useAppContext } from "../../../context/AppContext";
+  CompactDesktopScale,
+  DropdownSelect,
+  PageHeader,
+  PagePrimaryButton,
+} from "../../../components/ui";
 import { getCases } from "../../cases/cases.api";
-
+import CreateCaseModal from "../../cases/components/CreateCaseModal";
 import DashboardOverview from "../components/DashboardOverview";
-import CasesBySystemChart from "../../../components/charts/CasesBySystemChart";
 
-const buildCasesBySystem = (items) => {
-    const map = (items || []).reduce((acc, item) => {
-        const system = item.system || "Other";
-
-        acc[system] = (acc[system] || 0) + 1;
-
-        return acc;
-    }, {});
-
-    return Object.keys(map).map((system) => ({
-        system,
-        cases: map[system],
-    }));
-};
-
-const buildRecentActivity = (items) => {
-    return [...(items || [])]
-        .sort(
-            (a, b) =>
-                new Date(
-                    b.lastUpdatedAt || b.createdAt || 0
-                ) -
-                new Date(
-                    a.lastUpdatedAt || a.createdAt || 0
-                )
-        )
-        .slice(0, 5)
-        .map((item) => ({
-            id: item.id,
-            caseId: item.caseId ?? item.id,
-            summary:
-                item.summary ||
-                item.title ||
-                "Case updated",
-            updatedBy:
-                item.createdByEmail ||
-                item.updatedByEmail ||
-                "Unknown",
-        }));
-};
+const RANGE_OPTIONS = [
+  { value: "7", label: "Last 7 days" },
+  { value: "30", label: "Last 30 days" },
+  { value: "90", label: "Last 90 days" },
+];
 
 const DashboardPage = () => {
-    const { user } = useAppContext();
+    const createModal = useDisclosure();
     const [cases, setCases] = useState([]);
+    const [rangeDays, setRangeDays] = useState(30);
 
-    const cardBg = useColorModeValue(
-        "surface.card",
-        "gray.800"
-    );
-
-    useEffect(() => {
-        getCases()
+    const loadCases = useCallback(() => {
+        return getCases()
             .then(setCases)
-            .catch(() => setCases([]));
+            .catch((err) => {
+                console.error("Failed to load case statistics:", err);
+                setCases([]);
+            });
     }, []);
 
-    const systemData = buildCasesBySystem(cases);
-    const recentActivity = buildRecentActivity(cases);
+    useEffect(() => {
+        loadCases();
+    }, [loadCases]);
 
     return (
-        <Stack spacing={6} width="100%">
-            {/* Welcome */}
-            <Box>
-                <Heading size="lg">
-                    Welcome back,{" "}
-                    {user?.name
-                        ? user.name.split(" ")[0]
-                        : "there"}
-                </Heading>
+        <CompactDesktopScale>
+            <Box width="100%">
+                <PageHeader
+                    title="Cases Analytics"
+                    subtitle="Overview of case performance and system health"
+                    mb={4}
+                    filters={
+                        <DropdownSelect
+                            label="Date range"
+                            value={String(rangeDays)}
+                            onChange={(event) => {
+                                const next = Number(event.target.value);
+                                setRangeDays(Number.isFinite(next) ? next : 30);
+                            }}
+                            options={RANGE_OPTIONS}
+                            size="sm"
+                            minW="168px"
+                        />
+                    }
+                    actions={
+                        <PagePrimaryButton
+                            leftIcon={<FiPlus />}
+                            onClick={createModal.onOpen}
+                        >
+                            New Case
+                        </PagePrimaryButton>
+                    }
+                />
+
+                <DashboardOverview cases={cases} rangeDays={rangeDays} />
+
+                <CreateCaseModal
+                    isOpen={createModal.isOpen}
+                    onClose={createModal.onClose}
+                    onSuccess={loadCases}
+                />
             </Box>
-
-            {/* Statistics + Status Chart */}
-            <DashboardOverview cases={cases} />
-
-        </Stack>
+        </CompactDesktopScale>
     );
 };
 

@@ -1,379 +1,188 @@
 import api from "../../services/axios";
+import { displayUsername } from "../../utils/displayUsername";
 
-
-// ============================================================
-// BACKEND STATUS -> FRONTEND DISPLAY STATUS
-// ============================================================
+const JOBS_PATH = "/case-tracker/jobs";
 
 const statusToDisplay = (s) => {
-    if (!s) return "";
-
-    const map = {
-        IN_PROGRESS: "In progress",
-        AWAITING_VENDOR: "Awaiting vendor",
-        IN_UAT: "In UAT",
-        RESOLVED: "Resolved",
-    };
-
-    return map[s] || s;
+  const key = String(s || "").toUpperCase();
+  if (["CLOSED", "CLOSE", "RESOLVED"].includes(key)) {
+    return "Closed";
+  }
+  return "Open";
 };
 
+const priorityToDisplay = (p) => {
+  if (!p) return "Medium";
 
-// ============================================================
-// FRONTEND DISPLAY STATUS -> BACKEND ENUM
-// ============================================================
+  const map = {
+    LOW: "Low",
+    MEDIUM: "Medium",
+    HIGH: "High",
+    CRITICAL: "Critical",
+  };
 
-const statusToApi = (s) => {
-    if (!s) return "";
-
-    const map = {
-        "In progress": "IN_PROGRESS",
-        "Awaiting vendor": "AWAITING_VENDOR",
-        "In UAT": "IN_UAT",
-        "Resolved": "RESOLVED",
-    };
-
-    return (
-        map[s] ||
-        s
-            .toString()
-            .toUpperCase()
-            .replace(/\s+/g, "_")
-    );
+  const key = String(p).toUpperCase();
+  return map[key] || p;
 };
 
+const priorityToApi = (p) =>
+  String(p || "MEDIUM")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "_");
 
-// ============================================================
-// MAP BACKEND CASE -> FRONTEND CASE
-// ============================================================
+const unwrapList = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.content)) return data.content;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.jobs)) return data.jobs;
+  return [];
+};
+
+const unwrapItem = (data) => {
+  if (!data) return null;
+  if (data.data && typeof data.data === "object" && !Array.isArray(data.data)) {
+    return data.data;
+  }
+  return data;
+};
+
+const jobId = (id) => {
+  if (id == null) return id;
+  const raw = String(id);
+  return raw.startsWith("CT-") ? raw.replace("CT-", "") : raw;
+};
+
+const assigneeName = (value) => {
+  if (!value) return "";
+  if (typeof value === "object") {
+    return value.username || value.name || value.email || "";
+  }
+  return String(value);
+};
 
 export const mapCaseFromApi = (c) => {
-    if (!c) return null;
+  if (!c) return null;
 
-    const openedAt =
-        c.openedAt
-            ? new Date(c.openedAt)
-                .toISOString()
-                .slice(0, 10)
-            : c.createdAt
-                ? new Date(c.createdAt)
-                    .toISOString()
-                    .slice(0, 10)
-                : "";
+  const openedAt = c.createdAt || c.openedAt || "";
+  const status = statusToDisplay(c.status);
+  const assignedTo = assigneeName(c.assignedTo) || "Unassigned";
+  const sourceSystem = c.sourceSystem || "";
 
-    return {
-        id:
-            c.id != null
-                ? String(c.id)
-                : "",
-
-        caseId:
-        c.id,
-
-        supportSystemId:
-            c.supportSystemId != null
-                ? Number(c.supportSystemId)
-                : null,
-
-        system:
-            c.supportSystemName ||
-            c.systemName ||
-            c.system ||
-            "",
-
-        assignedToId:
-            c.assignedToId != null
-                ? Number(c.assignedToId)
-                : null,
-
-        assignedTo:
-            c.assignedTo ||
-            "Unassigned",
-
-        status:
-            statusToDisplay(c.status) ||
-            "In progress",
-
-        priority:
-            c.priority ||
-            "Medium",
-
-        openedAt,
-
-        summary:
-            c.summary ||
-            c.title ||
-            "",
-
-        title:
-            c.title ||
-            c.summary ||
-            "",
-
-        description:
-            c.description ||
-            "",
-
-        createdAt:
-        c.createdAt,
-
-        lastUpdatedAt:
-        c.lastUpdatedAt,
-
-        createdByEmail:
-        c.createdByEmail,
-    };
+  return {
+    id: c.id != null ? String(c.id) : "",
+    caseId: c.reference || c.caseId || c.id,
+    reference: c.reference || "",
+    supportSystemId:
+      c.supportSystemId != null ? Number(c.supportSystemId) : null,
+    system: sourceSystem || "Unspecified",
+    sourceSystem,
+    assignedToId: c.assignedToId != null ? Number(c.assignedToId) : null,
+    assignedTo,
+    status,
+    priority: priorityToDisplay(c.priority),
+    openedAt,
+    summary: c.title || c.summary || "",
+    title: c.title || c.summary || "",
+    description: c.description || "",
+    createdAt: c.createdAt,
+    lastUpdatedAt: c.lastUpdatedAt || c.updatedAt,
+    createdByEmail: displayUsername(c.createdByEmail),
+    createdBy: displayUsername(
+      c.createdByUsername,
+      c.createdByName,
+      c.createdByUser,
+      c.createdBy,
+      c.openedBy,
+      c.createdByEmail
+    ),
+    closedAt: c.closedAt || "",
+    closed: status === "Closed",
+  };
 };
 
+const mapJobWrite = (c = {}) => ({
+  title: c.title || c.summary || "",
+  description: c.description || "",
+  priority: priorityToApi(c.priority),
+});
 
-// ============================================================
-// MAP FRONTEND CASE -> BACKEND PAYLOAD
-// ============================================================
-
-export const mapCaseToApi = (c) => {
-    const payload = {};
-
-    /*
-     * SUMMARY
-     */
-
-    if (
-        c.summary !== undefined ||
-        c.title !== undefined
-    ) {
-        payload.summary =
-            c.summary ||
-            c.title ||
-            "";
-    }
-
-    /*
-     * DESCRIPTION
-     */
-
-    if (c.description !== undefined) {
-        payload.description =
-            c.description || "";
-    }
-
-    /*
-     * SUPPORT SYSTEM
-     */
-
-    if (c.supportSystemId !== undefined) {
-        payload.supportSystemId =
-            c.supportSystemId !== null &&
-            c.supportSystemId !== ""
-                ? Number(c.supportSystemId)
-                : null;
-    }
-
-    /*
-     * PRIORITY
-     */
-
-    if (c.priority !== undefined) {
-        payload.priority =
-            c.priority || "Medium";
-    }
-
-    /*
-     * ASSIGNEE
-     *
-     * IMPORTANT:
-     * Always use assignedToId.
-     *
-     * Do NOT send username here.
-     */
-
-    if (c.assignedToId !== undefined) {
-        payload.assignedToId =
-            c.assignedToId !== null &&
-            c.assignedToId !== ""
-                ? Number(c.assignedToId)
-                : null;
-    }
-
-    /*
-     * STATUS
-     */
-
-    if (c.status !== undefined) {
-        payload.status =
-            statusToApi(c.status) ||
-            "IN_PROGRESS";
-    }
-
-    return payload;
+export const getCases = async (filters = {}) => {
+  const res = await api.get(JOBS_PATH, {
+    params: Object.fromEntries(
+      Object.entries(filters).filter(([, value]) => value != null && value !== "")
+    ),
+  });
+  return unwrapList(res.data).map(mapCaseFromApi);
 };
 
-
-// ============================================================
-// GET ALL CASES
-// ============================================================
-
-export const getCases = async () => {
-    const res =
-        await api.get("/cases/get");
-
-    const list =
-        Array.isArray(res.data)
-            ? res.data
-            : [];
-
-    return list.map(mapCaseFromApi);
+export const getOpenCases = async () => {
+  const res = await api.get(`${JOBS_PATH}/open`);
+  return unwrapList(res.data).map(mapCaseFromApi);
 };
-
-
-// ============================================================
-// GET CASE BY ID
-// ============================================================
 
 export const getCaseById = async (id) => {
-    const numId =
-        typeof id === "string" &&
-        id.startsWith("CT-")
-            ? id.replace("CT-", "")
-            : id;
-
-    const res =
-        await api.get(
-            `/cases/get/${numId}`
-        );
-
-    return mapCaseFromApi(
-        res.data
-    );
+  const res = await api.get(`${JOBS_PATH}/${jobId(id)}`);
+  return mapCaseFromApi(unwrapItem(res.data));
 };
-
-
-// ============================================================
-// CREATE CASE
-// ============================================================
 
 export const createCase = async (payload) => {
-    const apiPayload =
-        mapCaseToApi(payload);
+  const body = {
+    ...mapJobWrite(payload),
+  };
 
-    console.log(
-        "=== CREATE CASE ==="
-    );
+  const assignedTo = assigneeName(payload.assignedTo);
+  if (assignedTo) {
+    body.assignedTo = assignedTo;
+  }
 
-    console.log(
-        "Original payload:",
-        payload
-    );
-
-    console.log(
-        "API payload:",
-        apiPayload
-    );
-
-    const res =
-        await api.post(
-            "/cases/add",
-            apiPayload
-        );
-
-    return mapCaseFromApi(
-        res.data
-    );
+  const res = await api.post(JOBS_PATH, body);
+  return mapCaseFromApi(unwrapItem(res.data));
 };
 
+export const assignCase = async (id, assignedTo) => {
+  const username = assigneeName(assignedTo);
+  if (!username) {
+    return null;
+  }
 
-// ============================================================
-// UPDATE CASE
-// ============================================================
-
-export const updateCase = async (
-    id,
-    payload
-) => {
-    const numId =
-        typeof id === "string" &&
-        id.startsWith("CT-")
-            ? id.replace("CT-", "")
-            : id;
-
-    const apiPayload =
-        mapCaseToApi(payload);
-
-    console.log(
-        "================================"
-    );
-
-    console.log(
-        "=== UPDATE CASE ==="
-    );
-
-    console.log(
-        "CASE ID:",
-        numId
-    );
-
-    console.log(
-        "ORIGINAL PAYLOAD:",
-        payload
-    );
-
-    console.log(
-        "API PAYLOAD:",
-        apiPayload
-    );
-
-    console.log(
-        "ASSIGNED TO ID:",
-        apiPayload.assignedToId
-    );
-
-    console.log(
-        "================================"
-    );
-
-    const res =
-        await api.put(
-            `/cases/update/${numId}`,
-            apiPayload
-        );
-
-    console.log(
-        "UPDATE RESPONSE:",
-        res.data
-    );
-
-    return mapCaseFromApi(
-        res.data
-    );
+  const res = await api.patch(
+    `${JOBS_PATH}/${jobId(id)}/assign`,
+    null,
+    { params: { assignedTo: username } }
+  );
+  return mapCaseFromApi(unwrapItem(res.data));
 };
 
-
-// ============================================================
-// GET ENABLED USERS / ASSIGNEES
-// ============================================================
-
-export const getAssignees = async () => {
-    const response =
-        await api.get(
-            "/users/assignees"
-        );
-
-    return Array.isArray(response.data)
-        ? response.data
-        : [];
+export const closeCase = async (id) => {
+  const res = await api.patch(`${JOBS_PATH}/${jobId(id)}/close`);
+  return mapCaseFromApi(unwrapItem(res.data));
 };
 
+export const deleteCase = async (id) => {
+  await api.delete(`${JOBS_PATH}/${jobId(id)}`);
+};
 
-// ============================================================
-// GET SUPPORT SYSTEMS
-// ============================================================
+export const ingestJiraJobs = async (jql) => {
+  const res = await api.post(`${JOBS_PATH}/ingest-jira`, null, {
+    params: { jql },
+  });
+  return unwrapList(res.data).map(mapCaseFromApi);
+};
 
-export const getSystems = async () => {
-    const response =
-        await api.get(
-            "/systems"
-        );
+export const updateCase = async (id, payload) => {
+  const numericId = jobId(id);
+  await api.put(`${JOBS_PATH}/${numericId}`, mapJobWrite(payload));
 
-    return Array.isArray(response.data)
-        ? response.data
-        : [];
+  const assignedTo = assigneeName(payload.assignedTo);
+  if (assignedTo && assignedTo !== "Unassigned") {
+    await assignCase(numericId, assignedTo);
+  }
+
+  const nextStatus = String(payload.status || "").toLowerCase();
+  if (nextStatus === "closed" || nextStatus === "resolved") {
+    await closeCase(numericId);
+  }
+
+  return getCaseById(numericId);
 };

@@ -1,23 +1,24 @@
 import React from "react";
+import { useTheme } from "@mui/material/styles";
 
 import Drawer from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
-import Avatar from "@mui/material/Avatar";
 import Typography from "@mui/material/Typography";
 
-import { useAppContext } from "../../context/AppContext";
-
 import NavItem from "./NavItem";
-import UserMenu from "./UserMenu";
+import BrandLogo from "./BrandLogo";
+import { BRAND } from "../../theme/muiTheme";
+import { compactPx, useCompactDesktop } from "../../utils/compactDesktop";
 
-import logo from "../../assets/logos/logoWhite.png";
-
-const drawerWidth = 240;
+const DRAWER_WIDTH = 248;
 
 const Sidebar = () => {
-    const { user } = useAppContext();
+    const theme = useTheme();
+    const isDark = theme.palette.mode === "dark";
+    const panel = isDark ? BRAND.panelDark : BRAND.panel;
+    const compact = useCompactDesktop();
+    const drawerWidth = compactPx(DRAWER_WIDTH, compact);
 
     return (
         <Drawer
@@ -34,72 +35,81 @@ const Sidebar = () => {
                 "& .MuiDrawer-paper": {
                     width: drawerWidth,
                     boxSizing: "border-box",
-
-                    backgroundColor: "#263238",
+                    backgroundColor: panel,
                     color: "#FFFFFF",
-
                     borderRight: "none",
-
-                    backgroundImage:
-                        "linear-gradient(180deg, #263238 0%, #1F292D 100%)",
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
                 },
             }}
         >
-            {/* Logo */}
             <Box
                 sx={{
-                    height: 100,
+                    position: "absolute",
+                    width: 280,
+                    height: 280,
+                    borderRadius: "50%",
+                    background: "rgba(0, 132, 61, 0.45)",
+                    top: -90,
+                    right: -90,
+                    pointerEvents: "none",
+                }}
+            />
+            <Box
+                sx={{
+                    position: "absolute",
+                    width: 200,
+                    height: 200,
+                    borderRadius: "50%",
+                    background: "rgba(20, 143, 65, 0.28)",
+                    bottom: 120,
+                    left: -80,
+                    pointerEvents: "none",
+                }}
+            />
+
+            <Box
+                sx={{
+                    minHeight: compactPx(112, compact),
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    px: 2,
+                    px: compact ? 1.2 : 1.5,
+                    py: compact ? 1.2 : 1.5,
+                    position: "relative",
+                    zIndex: 1,
                 }}
             >
-                <Box
-                    component="img"
-                    src={logo}
-                    alt="ZB Bank"
-                    sx={{
-                        width: 150,
-                        height: "auto",
-                    }}
+                <BrandLogo
+                    onDark
+                    height={`${compactPx(52, compact)}px`}
+                    maxW={`${compactPx(180, compact)}px`}
                 />
             </Box>
 
-            <Divider
-                sx={{
-                    borderColor: "rgba(255,255,255,0.12)",
-                }}
-            />
-
-            {/* Navigation */}
             <Stack
-                spacing={0.5}
+                spacing={compact ? 0.4 : 0.5}
                 sx={{
                     flexGrow: 1,
-                    p: 1.5,
+                    px: compact ? 1.2 : 1.5,
+                    pb: compact ? 1.5 : 2,
+                    position: "relative",
+                    zIndex: 1,
                 }}
             >
-                <NavItem />
+                <NavItem compact={compact} />
             </Stack>
 
-            <Divider
+            <Box
                 sx={{
-                    borderColor: "rgba(255,255,255,0.12)",
-                }}
-            />
-
-            {/* User */}
-            <Stack
-                direction="row"
-                alignItems="center"
-                spacing={1.5}
-                sx={{
-                    p: 1.5,
+                    p: compact ? 1.2 : 1.5,
+                    pb: compact ? 1.5 : 2,
+                    position: "relative",
+                    zIndex: 1,
                 }}
             >
-                <UserMenu />
-            </Stack>
+            </Box>
         </Drawer>
     );
 };

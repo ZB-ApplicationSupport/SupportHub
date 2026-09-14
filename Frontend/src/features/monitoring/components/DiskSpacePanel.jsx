@@ -1,93 +1,148 @@
 import React from "react";
 import {
     Box,
-    Heading,
-    SimpleGrid,
+    Flex,
     Text,
 } from "@chakra-ui/react";
+import { useChartStatsPopup } from "../../../components/ui";
+import { interpretUtilization } from "./MonitoringStatCard";
 
-const disks = [
-    { name: "/audit", value: 26.2 },
-    { name: "/home", value: 63.8 },
-    { name: "/opt", value: 100 },
-    { name: "/admin", value: 0.0496 },
-    { name: "/usr", value: 20.4 },
-    { name: "/tmp", value: 0.464 },
-    { name: "/", value: 1.8 },
-    { name: "/var", value: 18.8 },
-    { name: "/var/adm/ras/...", value: 0.0465 },
-];
+const clampPercentage = (value) =>
+    Math.min(
+        Math.max(Number(value) || 0, 0),
+        100
+    );
 
-const DiskSpacePanel = () => {
+const barColorForUsage = (usedPercentage) => {
+    if (usedPercentage > 75) return "#D64545";
+    if (usedPercentage > 50) return "#F4B41A";
+    return "#00843D";
+};
+
+const DiskRow = ({ disk, onHover, onLeave }) => {
+    const usedPercentage = clampPercentage(disk.usedPercentage);
+    const barColor = barColorForUsage(usedPercentage);
+    const status = interpretUtilization(usedPercentage);
+    const popupStats = {
+        title: disk.name,
+        items: [
+            {
+                label: "Used",
+                value: `${Math.round(usedPercentage)}%`,
+                color: barColor,
+            },
+            status
+                ? {
+                    label: "Status",
+                    value: status.label,
+                    color: status.color,
+                }
+                : null,
+        ].filter(Boolean),
+    };
+
+    return (
+        <Flex
+            align="center"
+            gap={3}
+            onMouseEnter={(event) => onHover(event, popupStats)}
+            onMouseMove={(event) => onHover(event, popupStats)}
+            onMouseLeave={onLeave}
+        >
+            <Text
+                fontSize="13px"
+                color="text.muted"
+                minW="64px"
+                maxW="72px"
+                noOfLines={1}
+                title={disk.name}
+            >
+                {disk.name}
+            </Text>
+
+            <Box
+                flex="1"
+                h="10px"
+                borderRadius="full"
+                bg="surface.subtle"
+                overflow="hidden"
+                minW={0}
+            >
+                <Box
+                    h="100%"
+                    w={`${usedPercentage}%`}
+                    bg={barColor}
+                    borderRadius="full"
+                />
+            </Box>
+
+            <Text
+                fontSize="13px"
+                fontWeight="600"
+                color="text.primary"
+                minW="40px"
+                textAlign="right"
+            >
+                {`${Math.round(usedPercentage)}%`}
+            </Text>
+        </Flex>
+    );
+};
+
+const DiskSpacePanel = ({ disks = [] }) => {
+    const visibleDisks = disks.slice(0, 6);
+    const { showPopup, hidePopup, popupNode } = useChartStatsPopup();
+
     return (
         <Box
             bg="surface.card"
-            borderWidth="1px"
-            borderRadius="md"
-            p={4}
+            border="1px solid"
+            borderColor="border.default"
+            borderRadius="16px"
+            boxShadow="card"
             overflow="hidden"
+            w="100%"
+            display="flex"
+            flexDirection="column"
         >
-
-            <Heading
-                size="sm"
-                mb={5}
+            <Flex
+                align="center"
+                px={5}
+                pt={4}
+                pb={2}
+                flexShrink={0}
             >
-                Disk Space Used
-            </Heading>
+                <Text
+                    fontSize="14px"
+                    fontWeight="500"
+                    color="text.primary"
+                >
+                    Disk Space
+                </Text>
+            </Flex>
 
-            <SimpleGrid
-                columns={9}
-                spacing={2}
-                alignItems="end"
-                minH="170px"
+            <Flex
+                direction="column"
+                px={5}
+                pb={4}
+                gap={3}
             >
-
-                {disks.map((disk) => (
-
-                    <Box
-                        key={disk.name}
-                        textAlign="center"
-                    >
-
-                        <Text
-                            fontSize="xs"
-                            mb={1}
-                        >
-                            {disk.value}%
-                        </Text>
-
-                        <Box
-                            h="115px"
-                            bg="gray.100"
-                            borderRadius="sm"
-                            position="relative"
-                            display="flex"
-                            alignItems="flex-end"
-                        >
-
-                            <Box
-                                w="100%"
-                                h={`${Math.min(disk.value, 100)}%`}
-                                bg="gray.400"
-                                borderRadius="sm"
-                            />
-
-                        </Box>
-
-                        <Text
-                            fontSize="10px"
-                            mt={1}
-                            noOfLines={1}
-                        >
-                            {disk.name}
-                        </Text>
-
-                    </Box>
-
-                ))}
-
-            </SimpleGrid>
-
+                {visibleDisks.length > 0 ? (
+                    visibleDisks.map((disk) => (
+                        <DiskRow
+                            key={disk.name}
+                            disk={disk}
+                            onHover={showPopup}
+                            onLeave={hidePopup}
+                        />
+                    ))
+                ) : (
+                    <Text fontSize="13px" color="text.muted">
+                        Disk usage data unavailable
+                    </Text>
+                )}
+            </Flex>
+            {popupNode}
         </Box>
     );
 };

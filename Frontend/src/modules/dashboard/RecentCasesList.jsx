@@ -11,7 +11,7 @@ import { STATUS_COLORS } from "../../utils/constants";
 
 const RecentCasesList = ({ items }) => {
   return (
-    <Box bg="surface.card" p={6} borderRadius="xl" borderWidth="1px">
+    <Box bg="surface.card" p={6} borderRadius="card" boxShadow="card">
       <Heading size="sm" mb={4}>
         Recently Updated Cases
       </Heading>

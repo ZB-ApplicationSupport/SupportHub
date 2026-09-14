@@ -1,50 +1,32 @@
 import React from "react";
 import {
     Box,
-    CircularProgress,
-    CircularProgressLabel,
-    Heading,
-    HStack,
-    SimpleGrid,
+    Flex,
     Text,
 } from "@chakra-ui/react";
+import { useChartStatsPopup } from "../../../components/ui";
+import { interpretUtilization } from "./MonitoringStatCard";
 
-const MemoryGauge = ({
-                         value,
-                         label,
-                         percentage,
-                     }) => {
-    return (
-        <Box textAlign="center">
-
-            <CircularProgress
-                value={percentage}
-                size="135px"
-                thickness="8px"
-            >
-
-                <CircularProgressLabel>
-
-                    <Text
-                        fontSize="2xl"
-                        fontWeight="500"
-                    >
-                        {value}
-                    </Text>
-
-                    <Text
-                        fontSize="sm"
-                        color="text.muted"
-                    >
-                        {label}
-                    </Text>
-
-                </CircularProgressLabel>
-
-            </CircularProgress>
-
-        </Box>
+const clampPercentage = (value) =>
+    Math.min(
+        Math.max(Number(value) || 0, 0),
+        100
     );
+
+const formatGiB = (value) => {
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+        return "—";
+    }
+
+    return number.toFixed(2);
+};
+
+const barColorForUsage = (usedPercentage) => {
+    if (usedPercentage > 75) return "#D64545";
+    if (usedPercentage > 50) return "#F4B41A";
+    return "#00843D";
 };
 
 const MemoryPanel = ({
@@ -52,57 +34,116 @@ const MemoryPanel = ({
                          used,
                          free,
                      }) => {
-
-    const usedPercentage =
-        total > 0
-            ? (used / total) * 100
-            : 0;
-
-    const freePercentage =
-        total > 0
-            ? (free / total) * 100
-            : 0;
+    const safeTotal = Number(total) || 0;
+    const safeUsed = Number(used) || 0;
+    const safeFree = Number(free) || 0;
+    const usedPercentage = safeTotal > 0
+        ? clampPercentage((safeUsed / safeTotal) * 100)
+        : 0;
+    const barColor = barColorForUsage(usedPercentage);
+    const status = interpretUtilization(usedPercentage);
+    const { showPopup, hidePopup, popupNode } = useChartStatsPopup();
+    const popupStats = {
+        title: "Memory",
+        items: [
+            {
+                label: "Used",
+                value: `${formatGiB(safeUsed)} GiB`,
+                color: barColor,
+            },
+            {
+                label: "Free",
+                value: `${formatGiB(safeFree)} GiB`,
+            },
+            {
+                label: "Total",
+                value: `${formatGiB(safeTotal)} GiB`,
+            },
+            {
+                label: "Usage",
+                value: `${Math.round(usedPercentage)}%`,
+                color: status?.color,
+            },
+            status
+                ? {
+                    label: "Status",
+                    value: status.label,
+                    color: status.color,
+                }
+                : null,
+        ].filter(Boolean),
+    };
 
     return (
         <Box
             bg="surface.card"
-            borderWidth="1px"
-            borderRadius="md"
-            p={4}
+            border="1px solid"
+            borderColor="border.default"
+            borderRadius="16px"
+            boxShadow="card"
+            overflow="hidden"
+            w="100%"
+            display="flex"
+            flexDirection="column"
+            onMouseEnter={(event) => showPopup(event, popupStats)}
+            onMouseMove={(event) => showPopup(event, popupStats)}
+            onMouseLeave={hidePopup}
         >
-
-            <Heading
-                size="sm"
-                mb={5}
+            <Flex
+                align="center"
+                px={5}
+                pt={4}
+                pb={2}
+                flexShrink={0}
             >
-                Memory
-            </Heading>
+                <Text
+                    fontSize="14px"
+                    fontWeight="500"
+                    color="text.primary"
+                >
+                    Memory
+                </Text>
+            </Flex>
 
-            <SimpleGrid
-                columns={3}
-                spacing={2}
+            <Flex
+                direction="column"
+                px={5}
+                pb={4}
+                gap={3}
             >
+                <Text
+                    fontSize="22px"
+                    fontWeight="600"
+                    color="text.primary"
+                    letterSpacing="-0.02em"
+                >
+                    {`${formatGiB(safeUsed)} / ${formatGiB(safeTotal)} GiB`}
+                </Text>
 
-                <MemoryGauge
-                    value={`${total} GiB`}
-                    label="Total"
-                    percentage={100}
-                />
+                <Box
+                    h="12px"
+                    borderRadius="full"
+                    bg="surface.subtle"
+                    overflow="hidden"
+                >
+                    <Box
+                        h="100%"
+                        w={`${usedPercentage}%`}
+                        bg={barColor}
+                        borderRadius="full"
+                    />
+                </Box>
 
-                <MemoryGauge
-                    value={`${used} GiB`}
-                    label="Used"
-                    percentage={usedPercentage}
-                />
-
-                <MemoryGauge
-                    value={`${free} GiB`}
-                    label="Free"
-                    percentage={freePercentage}
-                />
-
-            </SimpleGrid>
-
+                <Flex justify="space-between" gap={4}>
+                    <Text fontSize="13px" color="text.muted">
+                        {`Used ${formatGiB(safeUsed)}`}
+                    </Text>
+                    <Text fontSize="13px" color="text.muted">
+                        {`Free ${formatGiB(safeFree)}`}
+                    </Text>
+                </Flex>
+            </Flex>
+            {popupNode}
         </Box>
     );
 };

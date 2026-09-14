@@ -1,9 +1,22 @@
 import api from "../../services/axios";
+import { displayUsername } from "../../utils/displayUsername";
 
-const formatDate = (d) => {
-  if (!d) return "";
-  const date = new Date(d);
-  return date.toISOString().slice(0, 10);
+const SYSTEMS_PATH = "/case-tracker/systems";
+
+const unwrapList = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.content)) return data.content;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.systems)) return data.systems;
+  return [];
+};
+
+const unwrapItem = (data) => {
+  if (!data) return null;
+  if (data.data && typeof data.data === "object" && !Array.isArray(data.data)) {
+    return data.data;
+  }
+  return data;
 };
 
 export const mapSystemFromApi = (s) => {
@@ -12,43 +25,47 @@ export const mapSystemFromApi = (s) => {
     id: s.id != null ? `SYS-${String(s.id).padStart(3, "0")}` : "",
     numericId: s.id,
     name: s.name || "",
-    category: s.category || "",
-    owner: s.owner || "",
+    description: s.description || "",
     status: s.status || "Active",
-    updatedAt: formatDate(s.updatedAt),
+    addedAt: s.createdAt || s.addedAt || s.updatedAt || "",
+    addedBy: displayUsername(
+      s.addedBy,
+      s.createdByUsername,
+      s.createdBy,
+      s.owner
+    ),
   };
 };
 
 export const mapSystemToApi = (s) => ({
   name: s.name,
-  category: s.category,
-  owner: s.owner,
+  description: s.description,
   status: s.status || "Active",
 });
 
 export const getSystems = async () => {
-  const res = await api.get("/systems");
-  return (res.data || []).map(mapSystemFromApi);
+  const res = await api.get(SYSTEMS_PATH);
+  return unwrapList(res.data).map(mapSystemFromApi);
 };
 
 export const getSystemById = async (id) => {
   const numId = typeof id === "string" && id.startsWith("SYS-") ? id.replace("SYS-", "") : id;
-  const res = await api.get(`/systems/${numId}`);
-  return mapSystemFromApi(res.data);
+  const res = await api.get(`${SYSTEMS_PATH}/${numId}`);
+  return mapSystemFromApi(unwrapItem(res.data));
 };
 
 export const createSystem = async (payload) => {
-  const res = await api.post("/systems", mapSystemToApi(payload));
-  return mapSystemFromApi(res.data);
+  const res = await api.post(SYSTEMS_PATH, mapSystemToApi(payload));
+  return mapSystemFromApi(unwrapItem(res.data));
 };
 
 export const updateSystem = async (id, payload) => {
   const numId = typeof id === "string" && id.startsWith("SYS-") ? id.replace("SYS-", "") : id;
-  const res = await api.put(`/systems/${numId}`, mapSystemToApi(payload));
-  return mapSystemFromApi(res.data);
+  const res = await api.put(`${SYSTEMS_PATH}/${numId}`, mapSystemToApi(payload));
+  return mapSystemFromApi(unwrapItem(res.data));
 };
 
 export const deleteSystem = async (id) => {
   const numId = typeof id === "string" && id.startsWith("SYS-") ? id.replace("SYS-", "") : id;
-  await api.delete(`/systems/${numId}`);
+  await api.delete(`${SYSTEMS_PATH}/${numId}`);
 };

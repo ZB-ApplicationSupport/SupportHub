@@ -1,23 +1,16 @@
 import React, { useState } from "react";
-import {
-  Button,
-  FormControl,
-  FormLabel,
-  FormErrorMessage,
-  Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalHeader,
-  ModalOverlay,
-  Select,
-  Stack,
-  Text,
-  useToast,
-} from "@chakra-ui/react";
+import { SimpleGrid, Stack, Text, useToast } from "@chakra-ui/react";
+
 import { ROLES } from "../../../utils/constants";
 import { addUser } from "../users.api";
+import {
+  AppModal,
+  FieldGroup,
+  FieldInput,
+  FieldSelect,
+  ModalCancelButton,
+  ModalPrimaryButton,
+} from "../../../components/ui";
 
 const AddUserModal = ({ isOpen, onClose, onSuccess }) => {
   const toast = useToast();
@@ -29,8 +22,8 @@ const AddUserModal = ({ isOpen, onClose, onSuccess }) => {
     role: "USER",
   });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (event) => {
+    const { name, value } = event.target;
     setFormState((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -42,7 +35,9 @@ const AddUserModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleSave = async () => {
     setTouched(true);
-    if (!formState.email || !formState.temporaryPassword) return;
+    if (!formState.email || !formState.temporaryPassword) {
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -73,80 +68,77 @@ const AddUserModal = ({ isOpen, onClose, onSuccess }) => {
     }
   };
 
-  const emailError = touched && !formState.email;
-  const passwordError = touched && !formState.temporaryPassword;
-
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="lg" isCentered>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>
-          <Stack spacing={1}>
-            <Text fontWeight="700">Add User</Text>
-            <Text fontSize="sm" color="text.muted">
-              Create a new user profile for support operations.
-            </Text>
-          </Stack>
-        </ModalHeader>
-        <ModalCloseButton />
-        <ModalBody pb={6}>
-          <Stack spacing={4}>
-            <FormControl isInvalid={emailError} isRequired>
-              <FormLabel>Email</FormLabel>
-              <Input
-                name="email"
-                type="email"
-                placeholder="user@zb.example"
-                value={formState.email}
-                onChange={handleChange}
-                onBlur={() => setTouched((p) => ({ ...p, email: true }))}
-              />
-              <FormErrorMessage>Email is required.</FormErrorMessage>
-            </FormControl>
-            <FormControl isInvalid={passwordError} isRequired>
-              <FormLabel>Temporary password</FormLabel>
-              <Input
-                name="temporaryPassword"
-                type="password"
-                placeholder="Set a temporary password"
-                value={formState.temporaryPassword}
-                onChange={handleChange}
-                onBlur={() => setTouched((p) => ({ ...p, temporaryPassword: true }))}
-              />
-              <FormErrorMessage>Temporary password is required.</FormErrorMessage>
-            </FormControl>
-            <FormControl>
-              <FormLabel>Role</FormLabel>
-              <Select
-                name="role"
-                value={formState.role}
-                onChange={handleChange}
-              >
-                {ROLES.map((role) => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
-            <Stack direction="row" justify="flex-end">
-              <Button variant="ghost" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button
-                colorScheme="brand"
-                onClick={handleSave}
-                isLoading={submitting}
-                loadingText="Adding..."
-                isDisabled={!formState.email || !formState.temporaryPassword}
-              >
-                Add User
-              </Button>
-            </Stack>
-          </Stack>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+    <AppModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Add User"
+      subtitle="Create a new user profile for support operations."
+      footer={
+        <>
+          <ModalCancelButton onClick={handleClose} isDisabled={submitting}>
+            Cancel
+          </ModalCancelButton>
+          <ModalPrimaryButton
+            onClick={handleSave}
+            isLoading={submitting}
+            loadingText="Adding..."
+            isDisabled={!formState.email || !formState.temporaryPassword}
+          >
+            Add User
+          </ModalPrimaryButton>
+        </>
+      }
+    >
+      <Stack spacing={5}>
+        <FieldGroup label="Email">
+          <FieldInput
+            name="email"
+            type="email"
+            required
+            placeholder="user@zb.example"
+            value={formState.email}
+            onChange={handleChange}
+          />
+        </FieldGroup>
+        {touched && !formState.email && (
+          <Text fontSize="12px" color="#D64545" mt={-3}>
+            Email is required.
+          </Text>
+        )}
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <FieldGroup label="Temporary password">
+            <FieldInput
+              name="temporaryPassword"
+              type="password"
+              required
+              placeholder="Set a temporary password"
+              value={formState.temporaryPassword}
+              onChange={handleChange}
+            />
+          </FieldGroup>
+          <FieldGroup label="Role">
+            <FieldSelect
+              name="role"
+              value={formState.role}
+              onChange={handleChange}
+            >
+              {ROLES.map((role) => (
+                <option key={role} value={role}>
+                  {role}
+                </option>
+              ))}
+            </FieldSelect>
+          </FieldGroup>
+        </SimpleGrid>
+        {touched && !formState.temporaryPassword && (
+          <Text fontSize="12px" color="#D64545" mt={-3}>
+            Temporary password is required.
+          </Text>
+        )}
+      </Stack>
+    </AppModal>
   );
 };
 

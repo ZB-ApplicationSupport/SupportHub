@@ -1,909 +1,221 @@
 import React from "react";
-import {
-  Box,
-  Button,
-  SimpleGrid,
-  HStack,
-  Heading,
-  Icon,
-  IconButton,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
+import { Box, Stack } from "@chakra-ui/react";
 
-import {
-  FiArrowRight,
-  FiBriefcase,
-  FiExternalLink,
-  FiPlusCircle,
-  FiUsers,
-  FiActivity,
-} from "react-icons/fi";
+import DashboardStats from "./DashboardStats";
+import CasesByDateCard from "./CasesByDateCard";
+import CasesByPriorityCard from "./CasesByPriorityCard";
+import ActivityPanel from "./ActivityPanel";
+import OpenCaseAgeCard from "./OpenCaseAgeCard";
+import QuickLinksPanel from "./QuickLinksPanel";
 
-import { useNavigate } from "react-router-dom";
+const PRIORITY_ORDER = ["Critical", "High", "Medium", "Low"];
+const DAY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_RANGE_DAYS = 30;
 
-import StatsCard from "./StatsCard";
-import CaseStatusChart from "../../../components/charts/CaseStatusChart";
-import CasesBySystemChart from "../../../components/charts/CasesBySystemChart";
+const isOpenCase = (item) => item.status === "Open";
 
-/* ============================================================
-   BUILD CASES BY SYSTEM DATA
-============================================================ */
+const parseDate = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
 
-const buildCasesBySystem = (items) => {
+const AGE_BUCKETS = [
+  { label: "Under 24h", maxHours: 24, color: "#00843D" },
+  { label: "1–3 days", maxHours: 72, color: "#F4B41A" },
+  { label: "3+ days", maxHours: Infinity, color: "#D64545" },
+];
+
+const buildPriorityDistribution = (items) => {
   const map = (items || []).reduce((acc, item) => {
-    const system =
-        item.system?.name ||
-        item.systemName ||
-        item.system ||
-        "Other";
-
-    acc[system] = (acc[system] || 0) + 1;
-
+    const priority = item.priority || "Medium";
+    acc[priority] = (acc[priority] || 0) + 1;
     return acc;
   }, {});
 
-  return Object.keys(map).map((key) => ({
-    system: key,
-    cases: map[key],
+  return PRIORITY_ORDER.map((key) => ({
+    priority: key,
+    value: map[key] || 0,
   }));
 };
 
-/* ============================================================
-   BUILD CASE STATUS DATA
-============================================================ */
+const buildOpenCaseAge = (items) => {
+  const counts = AGE_BUCKETS.map((bucket) => ({ ...bucket, value: 0 }));
+  const now = Date.now();
+  let ageSum = 0;
+  let agedCount = 0;
 
-const buildStatusDistribution = (items) => {
-  const map = (items || []).reduce((acc, item) => {
-    const status = item.status || "Unknown";
+  (items || []).forEach((item) => {
+    if (!isOpenCase(item)) return;
+    const opened = parseDate(item.createdAt || item.openedAt);
+    if (!opened) return;
 
-    acc[status] = (acc[status] || 0) + 1;
+    const ageHours = Math.max(0, (now - opened.getTime()) / (60 * 60 * 1000));
+    const bucket =
+      counts.find((entry) => ageHours < entry.maxHours) ||
+      counts[counts.length - 1];
+    bucket.value += 1;
+    ageSum += ageHours;
+    agedCount += 1;
+  });
 
-    return acc;
-  }, {});
-
-  return Object.keys(map).map((key) => ({
-    status: key,
-    value: map[key],
-  }));
+  return {
+    buckets: counts.map(({ label, value, color }) => ({
+      label,
+      value,
+      color,
+      percent: agedCount > 0 ? Math.round((value / agedCount) * 100) : 0,
+    })),
+    averageHours: agedCount > 0 ? ageSum / agedCount : null,
+    total: agedCount,
+  };
 };
 
-/* ============================================================
-   BUILD RECENT ACTIVITY
-   Latest 3 cases
-============================================================ */
+const percentChange = (current, previous) => {
+  if (!Number.isFinite(current)) {
+    return null;
+  }
 
-const buildRecentActivity = (items) => {
-  return [...(items || [])]
-      .sort(
-          (a, b) =>
-              new Date(
-                  b.lastUpdatedAt ||
-                  b.updatedAt ||
-                  b.createdAt ||
-                  0
-              ) -
-              new Date(
-                  a.lastUpdatedAt ||
-                  a.updatedAt ||
-                  a.createdAt ||
-                  0
-              )
-      )
-      .slice(0, 3)
-      .map((item) => ({
-        id: item.id,
-        caseId: item.caseId ?? item.id,
+  if (!Number.isFinite(previous) || previous < 0) {
+    return null;
+  }
 
-        summary:
-            item.summary ||
-            item.title ||
-            "Case updated",
+  if (previous === 0) {
+    return current > 0
+      ? { delta: "New activity", trend: "new" }
+      : null;
+  }
 
-        updatedBy:
-            item.updatedByEmail ||
-            item.createdByEmail ||
-            "Unknown",
+  const change = ((current - previous) / previous) * 100;
+  if (!Number.isFinite(change)) {
+    return null;
+  }
 
-        updatedAt:
-            item.lastUpdatedAt ||
-            item.updatedAt ||
-            item.createdAt ||
-            null,
-      }));
+  const rounded = Math.round(change);
+  if (rounded === 0) {
+    return { delta: "0%", trend: "flat" };
+  }
+
+  return {
+    delta: `${Math.abs(rounded)}%`,
+    trend: rounded < 0 ? "down" : "up",
+  };
 };
 
-/* ============================================================
-   FORMAT ACTIVITY TIME
-============================================================ */
-
-const formatActivityTime = (dateValue) => {
-  if (!dateValue) {
-    return "";
-  }
-
-  const date = new Date(dateValue);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const now = new Date();
-
-  const difference = now.getTime() - date.getTime();
-
-  const seconds = Math.floor(difference / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (seconds < 60) {
-    return "Just now";
-  }
-
-  if (minutes < 60) {
-    return `${minutes} ${
-        minutes === 1 ? "minute" : "minutes"
-    } ago`;
-  }
-
-  if (hours < 24) {
-    return `${hours} ${
-        hours === 1 ? "hour" : "hours"
-    } ago`;
-  }
-
-  if (days < 7) {
-    return `${days} ${
-        days === 1 ? "day" : "days"
-    } ago`;
-  }
-
-  return date.toLocaleDateString();
+const existedAt = (item, atMs) => {
+  const created = parseDate(item.createdAt || item.openedAt);
+  return Boolean(created && created.getTime() <= atMs);
 };
 
-/* ============================================================
-   DASHBOARD OVERVIEW
-============================================================ */
+const wasOpenAt = (item, atMs) => {
+  if (!existedAt(item, atMs)) {
+    return false;
+  }
 
-const DashboardOverview = ({ cases = [] }) => {
-  const navigate = useNavigate();
+  const closed = parseDate(item.closedAt);
+  if (closed) {
+    return closed.getTime() > atMs;
+  }
 
-  /* ==========================================================
-     STATISTICS
-  ========================================================== */
+  return isOpenCase(item);
+};
+
+const wasClosedAt = (item, atMs) => {
+  if (!existedAt(item, atMs)) {
+    return false;
+  }
+
+  const closed = parseDate(item.closedAt);
+  if (closed) {
+    return closed.getTime() <= atMs;
+  }
+
+  return item.status === "Closed";
+};
+
+const DashboardOverview = ({
+  cases = [],
+  rangeDays = DEFAULT_RANGE_DAYS,
+}) => {
+  const windowDays =
+    Number.isFinite(Number(rangeDays)) && Number(rangeDays) > 0
+      ? Number(rangeDays)
+      : DEFAULT_RANGE_DAYS;
 
   const totalCases = cases.length;
+  const openCases = cases.filter(isOpenCase).length;
+  const resolvedCases = cases.filter((item) => item.status === "Closed").length;
+  const closureRateValue =
+    totalCases > 0 ? Math.round((resolvedCases / totalCases) * 100) : 0;
+  const closureRate = `${closureRateValue}%`;
+  const closureHint = `${resolvedCases} of ${totalCases} cases closed`;
 
-  // Open = In progress + In UAT
-  const openCases = cases.filter(
-      (item) =>
-          item.status === "In progress" ||
-          item.status === "In UAT"
-  ).length;
+  const rangeAgo = Date.now() - windowDays * DAY_MS;
+  const totalThen = cases.filter((item) => existedAt(item, rangeAgo)).length;
+  const openThen = cases.filter((item) => wasOpenAt(item, rangeAgo)).length;
+  const closedThen = cases.filter((item) => wasClosedAt(item, rangeAgo)).length;
+  const closureThen =
+    totalThen > 0 ? Math.round((closedThen / totalThen) * 100) : null;
 
-  // Resolved
-  const resolvedCases = cases.filter(
-      (item) => item.status === "Resolved"
-  ).length;
+  const totalTrend = percentChange(totalCases, totalThen);
+  const openTrend = percentChange(openCases, openThen);
+  const closedTrend = percentChange(resolvedCases, closedThen);
+  const closureTrend =
+    totalThen > 0 && Number(closureThen) > 0
+      ? percentChange(closureRateValue, closureThen)
+      : null;
 
-  // Awaiting vendor
-  const awaitingVendorCases = cases.filter(
-      (item) => item.status === "Awaiting vendor"
-  ).length;
-
-  /* ==========================================================
-     DASHBOARD DATA
-  ========================================================== */
-
-  const systemData = buildCasesBySystem(cases);
-
-  const statusData = buildStatusDistribution(cases);
-
-  const recentActivity = buildRecentActivity(cases);
-
-  /* ==========================================================
-     RENDER
-  ========================================================== */
+  const priorityData = buildPriorityDistribution(cases);
+  const openAgeData = buildOpenCaseAge(cases);
 
   return (
-      <Box mb={6}>
+    <Stack spacing={4} w="100%" pb={4}>
+      <DashboardStats
+        totalCases={totalCases}
+        openCases={openCases}
+        resolvedCases={resolvedCases}
+        closureRate={closureRate}
+        totalTrend={totalTrend}
+        openTrend={openTrend}
+        closedTrend={closedTrend}
+        closureTrend={closureTrend}
+        closureHint={closureHint}
+        comparisonHint={`vs previous ${windowDays} days`}
+      />
 
-        {/* ======================================================
-          FIRST ROW
-
-          Stats = 1/3
-          Status Graph = 2/3
-      ====================================================== */}
-
-        <SimpleGrid
-            columns={{
-              base: 1,
-              lg: 3,
-            }}
-            spacing={4}
-            mb={6}
-            alignItems="stretch"
+      <Box
+        display="grid"
+        gap={4}
+        gridTemplateColumns={{
+          base: "1fr",
+          lg: "repeat(2, minmax(0, 1fr))",
+          xl: "repeat(3, minmax(0, 1fr))",
+        }}
+      >
+        <Box
+          minW={0}
+          gridColumn={{
+            base: "auto",
+            lg: "1 / -1",
+            xl: "1 / 3",
+          }}
         >
-
-          {/* ==================================================
-            STAT CARDS - 1/3 WIDTH
-        ================================================== */}
-
-          <SimpleGrid
-              columns={2}
-              spacing={4}
-              h="280px"
-          >
-
-            <StatsCard
-                label="Total Cases"
-                value={totalCases}
-            />
-
-            <StatsCard
-                label="Open Cases"
-                value={openCases}
-            />
-
-            <StatsCard
-                label="Resolved Cases"
-                value={resolvedCases}
-            />
-
-            <StatsCard
-                label="Awaiting Vendor"
-                value={awaitingVendorCases}
-            />
-
-          </SimpleGrid>
-
-
-          {/* ==================================================
-            CASES BY STATUS - 2/3 WIDTH
-        ================================================== */}
-
-          <Box
-              gridColumn={{
-                base: "span 1",
-                lg: "span 2",
-              }}
-              bg="surface.card"
-              p={5}
-              borderRadius="xl"
-              borderWidth="1px"
-              h="280px"
-              overflow="hidden"
-          >
-
-            <Heading
-                size="sm"
-                mb={3}
-            >
-              Cases by Status
-            </Heading>
-
-            <Box
-                h="230px"
-                w="100%"
-            >
-              <CaseStatusChart
-                  data={statusData}
-              />
-            </Box>
-
-          </Box>
-
-        </SimpleGrid>
-
-
-        {/* ======================================================
-          SECOND ROW
-
-          Cases by System | Recent Activity | Quick Links
-      ====================================================== */}
-
-        <SimpleGrid
-            columns={{
-              base: 1,
-              md: 2,
-              xl: 3,
-            }}
-            spacing={4}
-            alignItems="stretch"
-        >
-
-          {/* ==================================================
-            CASES BY SYSTEM
-        ================================================== */}
-
-          <Box
-              bg="surface.card"
-              borderRadius="xl"
-              borderWidth="1px"
-              overflow="hidden"
-              h="355px"
-          >
-            <CasesBySystemChart
-                data={systemData}
-            />
-          </Box>
-
-
-          {/* ==================================================
-            RECENT ACTIVITY
-        ================================================== */}
-
-          <Box
-              bg="surface.card"
-              p={5}
-              borderRadius="xl"
-              borderWidth="1px"
-              h="355px"
-              overflow="hidden"
-              display="flex"
-              flexDirection="column"
-          >
-
-            {/* ==================================================
-              HEADER
-          ================================================== */}
-
-            <HStack
-                justify="space-between"
-                align="flex-start"
-                mb={4}
-            >
-
-              {/* TITLE */}
-
-              <Box>
-                <Heading
-                    size="sm"
-                    mb={1}
-                >
-                  Live Activity
-                </Heading>
-
-                <Text
-                    fontSize="xs"
-                    color="text.muted"
-                >
-                  Real-time case updates
-                </Text>
-              </Box>
-
-
-              {/* RIGHT SIDE */}
-
-              <HStack
-                  spacing={2}
-                  align="center"
-              >
-
-                {/* LIVE */}
-
-                <HStack
-                    spacing={1.5}
-                >
-                  <Box
-                      w="6px"
-                      h="6px"
-                      borderRadius="full"
-                      bg="green.500"
-                  />
-
-                  <Text
-                      fontSize="xs"
-                      color="green.500"
-                      fontWeight="600"
-                  >
-                    Live
-                  </Text>
-                </HStack>
-
-
-                {/* VIEW ALL ACTIVITY */}
-
-                <IconButton
-                    aria-label="View all activities"
-                    icon={
-                      <FiExternalLink />
-                    }
-                    variant="ghost"
-                    size="sm"
-                    color="gray.400"
-                    _hover={{
-                      color: "blue.600",
-                      bg: "blue.50",
-                    }}
-                    onClick={() =>
-                        navigate("/cases")
-                    }
-                />
-
-              </HStack>
-
-            </HStack>
-
-
-            {/* ==================================================
-              ACTIVITY LIST
-          ================================================== */}
-
-            <Stack
-                spacing={0}
-                flex="1"
-            >
-
-              {recentActivity.length === 0 ? (
-
-                  <Box
-                      py={8}
-                      textAlign="center"
-                  >
-                    <Text
-                        fontSize="sm"
-                        color="text.muted"
-                    >
-                      No recent activity
-                    </Text>
-                  </Box>
-
-              ) : (
-
-                  recentActivity.map(
-                      (item, index) => (
-
-                          <Box
-                              key={item.id}
-                              py={3}
-                              borderBottomWidth={
-                                index <
-                                recentActivity.length - 1
-                                    ? "1px"
-                                    : "0"
-                              }
-                              borderColor="gray.100"
-                          >
-
-                            <HStack
-                                spacing={3}
-                                align="flex-start"
-                            >
-
-                              {/* ACTIVITY ICON */}
-
-                              <Box
-                                  flexShrink={0}
-                                  w="30px"
-                                  h="30px"
-                                  borderRadius="md"
-                                  bg="blue.50"
-                                  color="blue.600"
-                                  display="flex"
-                                  alignItems="center"
-                                  justifyContent="center"
-                              >
-                                <Icon
-                                    as={FiActivity}
-                                    boxSize={4}
-                                />
-                              </Box>
-
-
-                              {/* ACTIVITY DETAILS */}
-
-                              <Box
-                                  minW={0}
-                                  flex="1"
-                              >
-
-                                {/* CASE ID */}
-
-                                <Text
-                                    fontSize="sm"
-                                    fontWeight="600"
-                                    lineHeight="1.2"
-                                >
-                                  {item.caseId}
-                                </Text>
-
-
-                                {/* SUMMARY + USER */}
-
-                                <Text
-                                    fontSize="xs"
-                                    color="text.muted"
-                                    mt={1}
-                                    noOfLines={1}
-                                >
-                                  {item.summary},{" "}
-                                  Updated by{" "}
-                                  {item.updatedBy}
-                                </Text>
-
-
-                                {/* TIME */}
-
-                                {item.updatedAt && (
-                                    <Text
-                                        fontSize="10px"
-                                        color="gray.400"
-                                        mt={1}
-                                    >
-                                      {formatActivityTime(
-                                          item.updatedAt
-                                      )}
-                                    </Text>
-                                )}
-
-                              </Box>
-
-                            </HStack>
-
-                          </Box>
-
-                      )
-                  )
-
-              )}
-
-            </Stack>
-
-          </Box>
-
-
-          {/* ==================================================
-    QUICK LINKS
-================================================== */}
-
-          <Box
-              bg="surface.card"
-              p={5}
-              borderRadius="xl"
-              borderWidth="1px"
-              h="355px"
-              overflow="hidden"
-              display="flex"
-              flexDirection="column"
-          >
-
-            {/* HEADER */}
-
-            <HStack
-                justify="space-between"
-                align="flex-start"
-                mb={4}
-            >
-
-              <Box>
-                <Heading
-                    size="sm"
-                    mb={1}
-                >
-                  Quick Links
-                </Heading>
-
-                <Text
-                    fontSize="xs"
-                    color="text.muted"
-                >
-                  Frequently used actions
-                </Text>
-              </Box>
-
-              {/* VIEW ALL LINKS */}
-
-              <IconButton
-                  aria-label="View all links"
-                  icon={<FiExternalLink />}
-                  variant="ghost"
-                  size="sm"
-                  color="gray.400"
-                  _hover={{
-                    color: "blue.600",
-                    bg: "blue.50",
-                  }}
-                  onClick={() =>
-                      navigate("/users")
-                  }
-              />
-
-            </HStack>
-
-
-            {/* ==================================================
-      LINKS
-  ================================================== */}
-
-            <Stack
-                spacing={0}
-                flex="1"
-            >
-
-              {/* ==================================================
-        FUSION ESSENCE
-    ================================================== */}
-
-              <Button
-                  variant="ghost"
-                  h="auto"
-                  py={3}
-                  px={1}
-                  justifyContent="space-between"
-                  textAlign="left"
-                  borderRadius="md"
-                  _hover={{
-                    bg: "gray.50",
-                  }}
-                  onClick={() =>
-                      navigate("/cases")
-                  }
-              >
-
-                <HStack spacing={3}>
-
-                  <Box
-                      w="32px"
-                      h="32px"
-                      borderRadius="md"
-                      bg="blue.50"
-                      color="blue.600"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      flexShrink={0}
-                  >
-                    <Icon
-                        as={FiBriefcase}
-                        boxSize={4}
-                    />
-                  </Box>
-
-                  <Box>
-
-                    <Text
-                        fontSize="sm"
-                        fontWeight="600"
-                        lineHeight="1.3"
-                    >
-                      Fusion Essence
-                    </Text>
-
-                    <Text
-                        fontSize="xs"
-                        color="text.muted"
-                        mt={0.5}
-                    >
-                      Load Balancer
-                    </Text>
-
-                  </Box>
-
-                </HStack>
-
-                <Icon
-                    as={FiArrowRight}
-                    color="gray.400"
-                />
-
-              </Button>
-
-
-              {/* ==================================================
-        TREASURY DEALING SYSTEM
-    ================================================== */}
-
-              <Button
-                  variant="ghost"
-                  h="auto"
-                  py={3}
-                  px={1}
-                  justifyContent="space-between"
-                  textAlign="left"
-                  borderRadius="md"
-                  _hover={{
-                    bg: "gray.50",
-                  }}
-                  onClick={() =>
-                      navigate("/cases/create")
-                  }
-              >
-
-                <HStack spacing={3}>
-
-                  <Box
-                      w="32px"
-                      h="32px"
-                      borderRadius="md"
-                      bg="green.50"
-                      color="green.600"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      flexShrink={0}
-                  >
-                    <Icon
-                        as={FiPlusCircle}
-                        boxSize={4}
-                    />
-                  </Box>
-
-                  <Box>
-
-                    <Text
-                        fontSize="sm"
-                        fontWeight="600"
-                        lineHeight="1.3"
-                    >
-                      Treasury Dealing System
-                    </Text>
-
-                    <Text
-                        fontSize="xs"
-                        color="text.muted"
-                        mt={0.5}
-                    >
-                      Live Environment
-                    </Text>
-
-                  </Box>
-
-                </HStack>
-
-                <Icon
-                    as={FiArrowRight}
-                    color="gray.400"
-                />
-
-              </Button>
-
-
-              {/* ==================================================
-        FINASTRA
-    ================================================== */}
-
-              <Button
-                  variant="ghost"
-                  h="auto"
-                  py={3}
-                  px={1}
-                  justifyContent="space-between"
-                  textAlign="left"
-                  borderRadius="md"
-                  _hover={{
-                    bg: "gray.50",
-                  }}
-                  onClick={() =>
-                      navigate("/cases/create")
-                  }
-              >
-
-                <HStack spacing={3}>
-
-                  <Box
-                      w="32px"
-                      h="32px"
-                      borderRadius="md"
-                      bg="orange.50"
-                      color="orange.600"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      flexShrink={0}
-                  >
-                    <Icon
-                        as={FiUsers}
-                        boxSize={4}
-                    />
-                  </Box>
-
-                  <Box>
-
-                    <Text
-                        fontSize="sm"
-                        fontWeight="600"
-                        lineHeight="1.3"
-                    >
-                      Finastra
-                    </Text>
-
-                    <Text
-                        fontSize="xs"
-                        color="text.muted"
-                        mt={0.5}
-                    >
-                      Case Portal
-                    </Text>
-
-                  </Box>
-
-                </HStack>
-
-                <Icon
-                    as={FiArrowRight}
-                    color="gray.400"
-                />
-
-              </Button>
-
-
-              {/* ==================================================
-        VIEW ALL LINKS
-    ================================================== */}
-
-              <Button
-                  variant="ghost"
-                  h="auto"
-                  py={3}
-                  px={1}
-                  justifyContent="space-between"
-                  textAlign="left"
-                  borderRadius="md"
-                  _hover={{
-                    bg: "gray.50",
-                  }}
-                  onClick={() =>
-                      navigate("/users")
-                  }
-              >
-
-                <HStack spacing={3}>
-
-                  <Box
-                      w="32px"
-                      h="32px"
-                      borderRadius="md"
-                      bg="purple.50"
-                      color="purple.600"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      flexShrink={0}
-                  >
-                    <Icon
-                        as={FiExternalLink}
-                        boxSize={4}
-                    />
-                  </Box>
-
-                  <Box>
-
-                    <Text
-                        fontSize="sm"
-                        fontWeight="600"
-                        lineHeight="1.3"
-                    >
-                      View All Links
-                    </Text>
-
-                    <Text
-                        fontSize="xs"
-                        color="text.muted"
-                        mt={0.5}
-                    >
-                      Manage all quick links
-                    </Text>
-
-                  </Box>
-
-                </HStack>
-
-                <Icon
-                    as={FiArrowRight}
-                    color="gray.400"
-                />
-
-              </Button>
-
-            </Stack>
-
-          </Box>
-
-        </SimpleGrid>
-
+          <CasesByDateCard cases={cases} days={windowDays} />
+        </Box>
+        <Box minW={0}>
+          <ActivityPanel cases={cases} />
+        </Box>
+        <Box minW={0}>
+          <CasesByPriorityCard data={priorityData} />
+        </Box>
+        <Box minW={0}>
+          <QuickLinksPanel />
+        </Box>
+        <Box minW={0}>
+          <OpenCaseAgeCard data={openAgeData} />
+        </Box>
       </Box>
+    </Stack>
   );
 };
 

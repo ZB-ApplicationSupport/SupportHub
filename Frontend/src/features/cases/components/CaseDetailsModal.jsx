@@ -1,173 +1,171 @@
-import React, {
-  useEffect,
-  useState,
-} from "react";
+import React, { useEffect, useState } from "react";
 
 import {
-  Badge,
-  Box,
   Button,
-  Divider,
-  FormControl,
-  FormLabel,
-  Heading,
   HStack,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Select,
   SimpleGrid,
-  Spinner,
   Stack,
   Text,
   useToast,
 } from "@chakra-ui/react";
 
+import { deleteCase, updateCase } from "../cases.api";
+import { formatCaseOpenedAt } from "../case.utils";
 import {
-  STATUS_COLORS,
-} from "../../../utils/constants";
-
+  deleteFile,
+  downloadFile,
+  getJobFiles,
+  uploadFile,
+} from "../../files.api";
 import {
-  updateCase,
-} from "../cases.api";
+  AppModal,
+  FieldGroup,
+  FieldInput,
+  FieldSelect,
+  FieldTextarea,
+  ModalCancelButton,
+  ModalPrimaryButton,
+} from "../../../components/ui";
 
-const STATUS_OPTIONS = [
-  "In progress",
-  "In UAT",
-  "Resolved",
-  "Awaiting vendor",
-];
-
-const PRIORITY_OPTIONS = [
-  "Low",
-  "Medium",
-  "High",
-  "Critical",
-];
+const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Critical"];
 
 const CaseDetailsModal = ({
-                            isOpen,
-                            onClose,
-                            item,
-                            assignees = [],
-                            isLoadingAssignees = false,
-                            onRefreshAssignees,
-                            onSuccess,
-                          }) => {
+  isOpen,
+  onClose,
+  item,
+  isAdmin = false,
+  onSuccess,
+}) => {
   const toast = useToast();
 
-  /*
-   * =========================================================
-   * STATE
-   * =========================================================
-   */
-
-  const [status, setStatus] = useState("");
-  const [priority, setPriority] = useState("");
-  const [assignedToId, setAssignedToId] =
-      useState("");
-
-  const [isSaving, setIsSaving] =
-      useState(false);
-
-  /*
-   * =========================================================
-   * LOAD / REFRESH ASSIGNEES
-   * =========================================================
-   */
-
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    if (
-        typeof onRefreshAssignees === "function"
-    ) {
-      onRefreshAssignees();
-    }
-  }, [
-    isOpen,
-    onRefreshAssignees,
-  ]);
-
-  /*
-   * =========================================================
-   * POPULATE CASE DATA
-   * =========================================================
-   */
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("Open");
+  const [priority, setPriority] = useState("Medium");
+  const [assignedTo, setAssignedTo] = useState("");
+  const [files, setFiles] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (!item) {
       return;
     }
 
-    console.log(
-        "================================"
-    );
-
-    console.log(
-        "=== CASE DETAILS ITEM ==="
-    );
-
-    console.log(
-        "ITEM:",
-        item
-    );
-
-    console.log(
-        "CASE ID:",
-        item.id
-    );
-
-    console.log(
-        "ASSIGNED TO ID:",
-        item.assignedToId
-    );
-
-    console.log(
-        "ASSIGNED TO:",
-        item.assignedTo
-    );
-
-    console.log(
-        "STATUS:",
-        item.status
-    );
-
-    console.log(
-        "PRIORITY:",
-        item.priority
-    );
-
-    console.log(
-        "================================"
-    );
-
-    setStatus(
-        item.status || "In progress"
-    );
-
+    setTitle(item.title || item.summary || "");
+    setDescription(item.description || "");
+    setStatus(item.status === "Closed" ? "Closed" : "Open");
     setPriority(
-        item.priority || "Medium"
+      PRIORITY_OPTIONS.includes(item.priority) ? item.priority : "Medium"
     );
+    setAssignedTo(
+      item.assignedTo && item.assignedTo !== "Unassigned"
+        ? item.assignedTo
+        : ""
+    );
+    setSelectedFile(null);
 
-    setAssignedToId(
-        item.assignedToId != null
-            ? String(item.assignedToId)
-            : ""
-    );
+    let isMounted = true;
+    getJobFiles(item.id)
+      .then((next) => {
+        if (isMounted) {
+          setFiles(next);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setFiles([]);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [item]);
 
-  /*
-   * =========================================================
-   * SAVE
-   * =========================================================
-   */
+  const handleDownloadFile = async (file) => {
+    const fileId = file.id || file.fileId;
+    if (!fileId) return;
+
+    try {
+      const res = await downloadFile(fileId);
+      const url = window.URL.createObjectURL(res.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.fileName || file.name || `file-${fileId}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      toast({
+        title: "Failed to download file",
+        description: err.response?.data?.message || "Please try again.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const refreshFiles = async () => {
+    if (!item?.id) return;
+    const next = await getJobFiles(item.id);
+    setFiles(next);
+  };
+
+  const handleUploadFile = async () => {
+    if (!selectedFile || !item?.id) return;
+
+    setIsUploading(true);
+    try {
+      await uploadFile(selectedFile, { jobId: item.id });
+      setSelectedFile(null);
+      await refreshFiles();
+      toast({
+        title: "File uploaded",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to upload file",
+        description: err.response?.data?.message || "Please try again.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDeleteFile = async (file) => {
+    const fileId = file.id || file.fileId;
+    if (!fileId) return;
+
+    try {
+      await deleteFile(fileId);
+      await refreshFiles();
+      toast({
+        title: "File deleted",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to delete file",
+        description: err.response?.data?.message || "Admin delete was not allowed.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
 
   const handleSave = async () => {
     if (!item) {
@@ -177,67 +175,17 @@ const CaseDetailsModal = ({
     setIsSaving(true);
 
     try {
-      /*
-       * IMPORTANT:
-       * Send assignedToId, NOT assignedTo username.
-       */
-
-      const payload = {
+      await updateCase(item.id, {
+        title,
+        description,
         status,
         priority,
-
-        assignedToId:
-            assignedToId !== ""
-                ? Number(assignedToId)
-                : null,
-      };
-
-      console.log(
-          "================================"
-      );
-
-      console.log(
-          "=== CASE DETAILS SAVE ==="
-      );
-
-      console.log(
-          "CASE ID:",
-          item.id
-      );
-
-      console.log(
-          "PAYLOAD:",
-          payload
-      );
-
-      console.log(
-          "STATUS:",
-          payload.status
-      );
-
-      console.log(
-          "PRIORITY:",
-          payload.priority
-      );
-
-      console.log(
-          "ASSIGNED TO ID:",
-          payload.assignedToId
-      );
-
-      console.log(
-          "================================"
-      );
-
-      await updateCase(
-          item.id,
-          payload
-      );
+        assignedTo,
+      });
 
       toast({
-        title: "Case updated",
-        description:
-            `Case ${item.id} was updated successfully.`,
+        title: "Job updated",
+        description: `${item.reference || item.caseId || item.id} was updated.`,
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -248,483 +196,231 @@ const CaseDetailsModal = ({
       }
 
       onClose();
-
     } catch (err) {
-      console.error(
-          "Failed to update case:",
-          err
-      );
-
       toast({
-        title: "Failed to update case",
+        title: "Failed to update job",
         description:
-            err.response?.data?.message ||
-            "Unable to update the case. Please try again.",
+          err.response?.data?.message ||
+          "Unable to update the job. Please try again.",
         status: "error",
         duration: 4000,
         isClosable: true,
       });
-
     } finally {
       setIsSaving(false);
     }
   };
 
-  /*
-   * =========================================================
-   * SAFETY
-   * =========================================================
-   */
+  const handleDelete = async () => {
+    if (!item) {
+      return;
+    }
 
-  if (!item) {
-    return null;
-  }
+    const confirmed = window.confirm(
+      `Delete ${item.reference || item.caseId || item.id}? This cannot be undone.`
+    );
+    if (!confirmed) {
+      return;
+    }
 
-  /*
-   * =========================================================
-   * REFERENCES
-   * =========================================================
-   */
+    setIsDeleting(true);
+    try {
+      await deleteCase(item.id);
+      toast({
+        title: "Job deleted",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      if (onSuccess) {
+        await onSuccess();
+      }
+      onClose();
+    } catch (err) {
+      toast({
+        title: "Failed to delete job",
+        description:
+          err.response?.data?.message || "Admin delete was not allowed.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
-  const hasJiraRefs =
-      Array.isArray(item.jiraRefs) &&
-      item.jiraRefs.length > 0;
-
-  const hasVendorRefs =
-      Array.isArray(item.vendorRefs) &&
-      item.vendorRefs.length > 0;
-
-  /*
-   * =========================================================
-   * RENDER
-   * =========================================================
-   */
+  const busy = isSaving || isDeleting;
+  const isClosed = item?.status === "Closed" || Boolean(item?.closedAt);
 
   return (
-      <Modal
-          isOpen={isOpen}
-          onClose={onClose}
-          size="2xl"
-          isCentered
-          scrollBehavior="inside"
-      >
-        <ModalOverlay bg="blackAlpha.600" />
-
-        <ModalContent
-            borderRadius="xl"
-            overflow="hidden"
-        >
-
-          {/* HEADER */}
-
-          <ModalHeader
-              px={6}
-              py={5}
-              borderBottomWidth="1px"
+    <AppModal
+      isOpen={isOpen && Boolean(item)}
+      onClose={onClose}
+      title={item?.title || item?.summary || "Job details"}
+      compact
+      subtitle={
+        item
+          ? `${item.reference || item.caseId || item.id}${
+              item.sourceSystem ? ` · ${item.sourceSystem}` : ""
+            }`
+          : ""
+      }
+      footer={
+        <>
+          {isAdmin && (
+            <ModalCancelButton
+              onClick={handleDelete}
+              isDisabled={busy}
+              mr="auto"
+              bg="danger.wash"
+              color="danger.onWash"
+              _hover={{ bg: "rgba(214, 69, 69, 0.22)" }}
+            >
+              Delete
+            </ModalCancelButton>
+          )}
+          <ModalCancelButton onClick={onClose} isDisabled={busy}>
+            Cancel
+          </ModalCancelButton>
+          <ModalPrimaryButton
+            onClick={handleSave}
+            isLoading={isSaving}
+            loadingText="Saving..."
+            isDisabled={busy}
           >
-            <Stack spacing={1}>
+            Save Changes
+          </ModalPrimaryButton>
+        </>
+      }
+    >
+      {item && (
+        <Stack spacing={5}>
+          <FieldGroup label="Title">
+            <FieldInput
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+          </FieldGroup>
 
-              <HStack spacing={3}>
+          <FieldGroup label="Description" tall>
+            <FieldTextarea
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+            />
+          </FieldGroup>
 
-                <Heading size="md">
-                  {item.summary}
-                </Heading>
-
-                <Badge
-                    colorScheme={
-                        STATUS_COLORS[item.status] ||
-                        "gray"
-                    }
-                >
-                  {item.status}
-                </Badge>
-
-              </HStack>
-
-              <Text
-                  fontSize="xs"
-                  color="gray.500"
-              >
-                Case ID: {item.id}
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            <FieldGroup label="Opened">
+              <Text fontSize="sm" fontWeight="500">
+                {formatCaseOpenedAt(item.openedAt || item.createdAt)}
               </Text>
+            </FieldGroup>
 
-            </Stack>
-          </ModalHeader>
+            <FieldGroup label="Created by">
+              <Text fontSize="sm" fontWeight="500">
+                {item.createdBy || "—"}
+              </Text>
+            </FieldGroup>
 
-          <ModalCloseButton />
-
-          {/* BODY */}
-
-          <ModalBody
-              px={6}
-              py={6}
-          >
-            <Stack spacing={6}>
-
-              {/* CASE INFORMATION */}
-
-              <Box>
-
-                <Text
-                    fontSize="sm"
-                    fontWeight="600"
-                    mb={3}
-                >
-                  Case Information
+            <FieldGroup label="Status">
+              {isClosed ? (
+                <Text fontSize="sm" fontWeight="500">
+                  Closed
+                  {item.closedAt
+                    ? ` · ${formatCaseOpenedAt(item.closedAt)}`
+                    : ""}
                 </Text>
-
-                <Stack spacing={3}>
-
-                  <Box>
-
-                    <Text
-                        fontSize="xs"
-                        fontWeight="600"
-                        color="text.muted"
-                        mb={1}
-                    >
-                      Description
-                    </Text>
-
-                    <Text fontSize="sm">
-                      {item.description ||
-                          "No description provided."}
-                    </Text>
-
-                  </Box>
-
-                  <SimpleGrid
-                      columns={{
-                        base: 1,
-                        md: 3,
-                      }}
-                      spacing={4}
-                  >
-
-                    <Box>
-
-                      <Text
-                          fontSize="xs"
-                          fontWeight="600"
-                          color="text.muted"
-                          mb={1}
-                      >
-                        Case ID
-                      </Text>
-
-                      <Text fontSize="sm">
-                        {item.id}
-                      </Text>
-
-                    </Box>
-
-                    <Box>
-
-                      <Text
-                          fontSize="xs"
-                          fontWeight="600"
-                          color="text.muted"
-                          mb={1}
-                      >
-                        System
-                      </Text>
-
-                      <Text fontSize="sm">
-                        {item.system || "—"}
-                      </Text>
-
-                    </Box>
-
-                    <Box>
-
-                      <Text
-                          fontSize="xs"
-                          fontWeight="600"
-                          color="text.muted"
-                          mb={1}
-                      >
-                        Date Opened
-                      </Text>
-
-                      <Text fontSize="sm">
-                        {item.openedAt || "—"}
-                      </Text>
-
-                    </Box>
-
-                  </SimpleGrid>
-
-                </Stack>
-
-              </Box>
-
-              <Divider />
-
-              {/* UPDATE CASE */}
-
-              <Box>
-
-                <Text
-                    fontSize="sm"
-                    fontWeight="600"
-                    mb={4}
+              ) : (
+                <FieldSelect
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value)}
                 >
-                  Update Case
-                </Text>
-
-                <SimpleGrid
-                    columns={{
-                      base: 1,
-                      md: 3,
-                    }}
-                    spacing={4}
-                >
-
-                  {/* STATUS */}
-
-                  <FormControl>
-
-                    <FormLabel fontSize="sm">
-                      Status
-                    </FormLabel>
-
-                    <Select
-                        size="sm"
-                        value={status}
-                        onChange={(event) =>
-                            setStatus(
-                                event.target.value
-                            )
-                        }
-                    >
-
-                      {STATUS_OPTIONS.map(
-                          (option) => (
-                              <option
-                                  key={option}
-                                  value={option}
-                              >
-                                {option}
-                              </option>
-                          )
-                      )}
-
-                    </Select>
-
-                  </FormControl>
-
-                  {/* PRIORITY */}
-
-                  <FormControl>
-
-                    <FormLabel fontSize="sm">
-                      Priority
-                    </FormLabel>
-
-                    <Select
-                        size="sm"
-                        value={priority}
-                        onChange={(event) =>
-                            setPriority(
-                                event.target.value
-                            )
-                        }
-                    >
-
-                      {PRIORITY_OPTIONS.map(
-                          (option) => (
-                              <option
-                                  key={option}
-                                  value={option}
-                              >
-                                {option}
-                              </option>
-                          )
-                      )}
-
-                    </Select>
-
-                  </FormControl>
-
-                  {/* ASSIGNEE */}
-
-                  <FormControl>
-
-                    <FormLabel fontSize="sm">
-                      Assignee
-                    </FormLabel>
-
-                    {isLoadingAssignees ? (
-
-                        <HStack
-                            borderWidth="1px"
-                            borderRadius="md"
-                            px={3}
-                            py={2}
-                        >
-
-                          <Spinner size="sm" />
-
-                          <Text fontSize="sm">
-                            Loading users...
-                          </Text>
-
-                        </HStack>
-
-                    ) : (
-
-                        <Select
-                            size="sm"
-                            value={assignedToId}
-                            onChange={(event) =>
-                                setAssignedToId(
-                                    event.target.value
-                                )
-                            }
-                        >
-
-                          <option value="">
-                            Unassigned
-                          </option>
-
-                          {assignees.map(
-                              (user) => {
-
-                                const userId =
-                                    user.id ??
-                                    user.userId;
-
-                                if (
-                                    userId === null ||
-                                    userId === undefined
-                                ) {
-                                  return null;
-                                }
-
-                                return (
-                                    <option
-                                        key={userId}
-                                        value={String(userId)}
-                                    >
-                                      {user.username ||
-                                          user.fullName ||
-                                          user.name ||
-                                          user.email}
-                                      {" — "}
-                                      {user.email || ""}
-                                    </option>
-                                );
-                              }
-                          )}
-
-                        </Select>
-
-                    )}
-
-                    {!isLoadingAssignees && (
-                        <Text
-                            fontSize="xs"
-                            color="gray.500"
-                            mt={1}
-                        >
-                          Current assignee:{" "}
-                          {item.assignedTo ||
-                              "Unassigned"}
-                        </Text>
-                    )}
-
-                  </FormControl>
-
-                </SimpleGrid>
-
-              </Box>
-
-              {/* REFERENCES */}
-
-              {(hasJiraRefs ||
-                  hasVendorRefs) && (
-
-                  <>
-                    <Divider />
-
-                    <Box>
-
-                      <Text
-                          fontSize="sm"
-                          fontWeight="600"
-                          mb={3}
-                      >
-                        References
-                      </Text>
-
-                      <HStack
-                          spacing={2}
-                          flexWrap="wrap"
-                      >
-
-                        {hasJiraRefs && (
-                            <Badge
-                                variant="outline"
-                                colorScheme="purple"
-                            >
-                              Jira{" "}
-                              {item.jiraRefs.join(", ")}
-                            </Badge>
-                        )}
-
-                        {hasVendorRefs && (
-                            <Badge
-                                variant="outline"
-                                colorScheme="orange"
-                            >
-                              Vendor{" "}
-                              {item.vendorRefs.join(", ")}
-                            </Badge>
-                        )}
-
-                      </HStack>
-
-                    </Box>
-
-                  </>
+                  <option value="Open">Open</option>
+                  <option value="Closed">Closed</option>
+                </FieldSelect>
               )}
+            </FieldGroup>
 
-            </Stack>
-          </ModalBody>
-
-          {/* FOOTER */}
-
-          <ModalFooter
-              px={6}
-              py={4}
-              borderTopWidth="1px"
-          >
-
-            <HStack spacing={3}>
-
-              <Button
-                  variant="ghost"
-                  onClick={onClose}
-                  isDisabled={isSaving}
+            <FieldGroup label="Priority">
+              <FieldSelect
+                value={priority}
+                onChange={(event) => setPriority(event.target.value)}
               >
-                Cancel
-              </Button>
+                {PRIORITY_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </FieldSelect>
+            </FieldGroup>
 
+            <FieldGroup label="Assignee">
+              <FieldInput
+                value={assignedTo}
+                onChange={(event) => setAssignedTo(event.target.value)}
+                placeholder="Keycloak username"
+              />
+            </FieldGroup>
+
+            <FieldGroup label="Source">
+              <Text fontSize="sm" fontWeight="500">
+                {item.sourceSystem || item.system || "—"}
+              </Text>
+            </FieldGroup>
+          </SimpleGrid>
+
+          <FieldGroup label="Files">
+            <HStack mb={3} align="center">
+              <FieldInput
+                type="file"
+                onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
+              />
               <Button
-                  colorScheme="brand"
-                  onClick={handleSave}
-                  isLoading={isSaving}
-                  loadingText="Saving..."
+                size="sm"
+                colorScheme="green"
+                onClick={handleUploadFile}
+                isLoading={isUploading}
+                isDisabled={!selectedFile}
               >
-                Save Changes
+                Upload
               </Button>
-
             </HStack>
-
-          </ModalFooter>
-
-        </ModalContent>
-      </Modal>
+            {files.length === 0 ? (
+              <Text fontSize="sm" color="text.muted">
+                No files attached.
+              </Text>
+            ) : (
+              <Stack spacing={2}>
+                {files.map((file, index) => (
+                  <HStack key={file.id || file.fileId || index} spacing={2}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      flex="1"
+                      justifyContent="flex-start"
+                      onClick={() => handleDownloadFile(file)}
+                    >
+                      {file.fileName || file.name || `File ${index + 1}`}
+                    </Button>
+                  {isAdmin ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      colorScheme="red"
+                      onClick={() => handleDeleteFile(file)}
+                    >
+                      Delete
+                    </Button>
+                  ) : null}
+                  </HStack>
+                ))}
+              </Stack>
+            )}
+          </FieldGroup>
+        </Stack>
+      )}
+    </AppModal>
   );
 };
 
